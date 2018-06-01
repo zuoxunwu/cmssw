@@ -164,6 +164,111 @@ void PrimitiveSelection::process(
 
 
 // _____________________________________________________________________________
+// Specialized process() for CPPF
+template<>
+void PrimitiveSelection::process(
+    emtf::CPPFTag tag,
+    const TriggerPrimitiveCollection& muon_primitives,
+    std::map<int, TriggerPrimitiveCollection>& selected_cppf_map
+) const {
+  TriggerPrimitiveCollection::const_iterator tp_it  = muon_primitives.begin();
+  TriggerPrimitiveCollection::const_iterator tp_end = muon_primitives.end();
+
+  for (; tp_it != tp_end; ++tp_it) {
+    int selected_cppf = select_rpc(*tp_it);  // Returns RPC "link" index (0 - 41)
+
+    if (selected_cppf >= 0) {
+      if (not(selected_cppf < NUM_RPC_CHAMBERS))
+	{ edm::LogError("L1T") << "selected_cppf = " << selected_cppf << ", NUM_RPC_CHAMBERS = " << NUM_RPC_CHAMBERS; return; }
+      selected_cppf_map[selected_cppf].push_back(*tp_it);
+    }
+  }
+
+  // Map RPC subsector and chamber to CSC chambers
+  // Note: RE3/2 & RE3/3 are considered as one chamber; RE4/2 & RE4/3 too.
+  bool map_rpc_to_csc = true;
+  if (map_rpc_to_csc) {
+    std::map<int, TriggerPrimitiveCollection> tmp_selected_cppf_map;
+
+    std::map<int, TriggerPrimitiveCollection>::iterator map_tp_it  = selected_cppf_map.begin();
+    std::map<int, TriggerPrimitiveCollection>::iterator map_tp_end = selected_cppf_map.end();
+
+    for (; map_tp_it != map_tp_end; ++map_tp_it) {
+      int selected = map_tp_it->first;
+      TriggerPrimitiveCollection& tmp_primitives = map_tp_it->second;  // pass by reference
+
+      int rpc_sub = selected / 8;
+      int rpc_chm = selected % 8;
+
+      int pc_station = -1;
+      int pc_chamber = -1;
+
+      if (rpc_sub != 6) {  // native
+        if (rpc_chm == 0) {  // RE1/2
+          if (0 <= rpc_sub && rpc_sub < 3) {
+            pc_station = 0;
+            pc_chamber = 3 + rpc_sub;
+          } else if (3 <= rpc_sub && rpc_sub < 6) {
+            pc_station = 1;
+            pc_chamber = 3 + (rpc_sub - 3);
+          }
+        } else if (rpc_chm == 1) {  // RE2/2
+           pc_station = 2;
+           pc_chamber = 3 + rpc_sub;
+        } else if (2 <= rpc_chm && rpc_chm <= 3) {  // RE3/2, RE3/3
+           pc_station = 3;
+           pc_chamber = 3 + rpc_sub;
+        } else if (4 <= rpc_chm && rpc_chm <= 5) {  // RE4/2, RE4/3
+           pc_station = 4;
+           pc_chamber = 3 + rpc_sub;
+        }
+
+      } else {  // neighbor
+	pc_station = 5;
+	if (rpc_chm == 0) {  // RE1/2
+	  pc_chamber = 1;
+	} else if (rpc_chm == 1) {  // RE2/2
+	  pc_chamber = 4;
+	} else if (2 <= rpc_chm && rpc_chm <= 3) {  // RE3/2, RE3/3
+	  pc_chamber = 6;
+	} else if (4 <= rpc_chm && rpc_chm <= 5) {  // RE4/2, RE4/3
+	  pc_chamber = 8;
+	}
+      }
+
+      if (not(pc_station != -1 && pc_chamber != -1))
+	{ edm::LogError("L1T") << "pc_station = " << pc_station << ", pc_chamber = " << pc_chamber; return; }
+
+      selected = (pc_station * 9) + pc_chamber;
+
+      bool ignore_this_rpc_chm = false;
+      if (rpc_chm == 3 || rpc_chm == 5) { // special case of RE3,4/2 and RE3,4/3 chambers
+        // if RE3,4/2 exists, ignore RE3,4/3. In C++, this assumes that the loop
+        // over selected_rpc_map will always find RE3,4/2 before RE3,4/3
+        if (tmp_selected_cppf_map.find(selected) != tmp_selected_cppf_map.end())
+          ignore_this_rpc_chm = true;
+      }
+
+      if (ignore_this_rpc_chm) {
+        // Set CPPF stubs as invalid
+        for (auto&& tp : tmp_primitives) {
+          tp.accessCPPFData().valid = 0;
+        }
+      }
+
+      if (tmp_selected_cppf_map.find(selected) == tmp_selected_cppf_map.end()) {
+        tmp_selected_cppf_map[selected] = tmp_primitives;
+      } else {
+        tmp_selected_cppf_map[selected].insert(tmp_selected_cppf_map[selected].end(), tmp_primitives.begin(), tmp_primitives.end());
+      }
+    }  // end loop over selected_cppf_map
+
+    std::swap(selected_cppf_map, tmp_selected_cppf_map);  // replace the original map
+  }  // end if map_rpc_to_csc
+}
+
+
+// _____________________________________________________________________________
 // Specialized process() for RPC
 template<>
 void PrimitiveSelection::process(
@@ -380,6 +485,7 @@ void PrimitiveSelection::process(
 
 void PrimitiveSelection::merge(
     const std::map<int, TriggerPrimitiveCollection>& selected_csc_map,
+    const std::map<int, TriggerPrimitiveCollection>& selected_cppf_map,
     const std::map<int, TriggerPrimitiveCollection>& selected_rpc_map,
     const std::map<int, TriggerPrimitiveCollection>& selected_gem_map,
     std::map<int, TriggerPrimitiveCollection>& selected_prim_map
@@ -419,7 +525,37 @@ void PrimitiveSelection::merge(
     }
   }
 
-  // Third, insert RPC stubs if there is no CSC/GEM hits
+  // Third, insert CPPF stubs if there is no CSC/GEM hits
+  map_tp_it  = selected_cppf_map.begin();
+  map_tp_end = selected_cppf_map.end();
+
+  for (; map_tp_it != map_tp_end; ++map_tp_it) {
+    int selected_cppf = map_tp_it->first;
+    const TriggerPrimitiveCollection& cppf_primitives = map_tp_it->second;
+    if (cppf_primitives.empty())  continue;
+    if (not(cppf_primitives.size() <= 4))  // at most 4 hits
+      { edm::LogError("L1T") << "cppf_primitives.size() = " << cppf_primitives.size(); return; }
+
+    bool found = (selected_prim_map.find(selected_cppf) != selected_prim_map.end());
+    if (!found) {
+      // No CSC/GEM hits, insert all CPPF hits
+      //selected_prim_map[selected_cppf] = cppf_primitives;
+
+      // No CSC/GEM hits, insert the valid CPPF hits
+      TriggerPrimitiveCollection tmp_cppf_primitives;
+      for (const auto& tp : cppf_primitives) {
+        if (tp.getCPPFData().valid != 0) {
+          tmp_cppf_primitives.push_back(tp);
+        }
+      }
+      if (not(cppf_primitives.size() <= 2))  // at most 2 hits
+	{ edm::LogError("L1T") << "cppf_primitives.size() = " << cppf_primitives.size(); return; }
+      selected_prim_map[selected_cppf] = tmp_cppf_primitives;
+
+    }
+  }
+
+  // Fourth, insert RPC stubs if there is no CSC/GEM hits
   map_tp_it  = selected_rpc_map.begin();
   map_tp_end = selected_rpc_map.end();
 
@@ -460,6 +596,7 @@ void PrimitiveSelection::merge(
 
 void PrimitiveSelection::merge_no_truncate(
     const std::map<int, TriggerPrimitiveCollection>& selected_csc_map,
+    const std::map<int, TriggerPrimitiveCollection>& selected_cppf_map,
     const std::map<int, TriggerPrimitiveCollection>& selected_rpc_map,
     const std::map<int, TriggerPrimitiveCollection>& selected_gem_map,
     std::map<int, TriggerPrimitiveCollection>& selected_prim_map
@@ -470,7 +607,10 @@ void PrimitiveSelection::merge_no_truncate(
   // Second, insert GEM hits
   merge_map_into_map(selected_gem_map, selected_prim_map);
 
-  // Third, insert RPC hits
+  // Third, insert CPPF hits
+  merge_map_into_map(selected_cppf_map, selected_prim_map);
+
+  // Fourth, insert RPC hits
   merge_map_into_map(selected_rpc_map, selected_prim_map);
 }
 
@@ -615,9 +755,9 @@ int PrimitiveSelection::get_index_csc(int tp_subsector, int tp_station, int tp_c
 int PrimitiveSelection::select_rpc(const TriggerPrimitive& muon_primitive) const {
   int selected = -1;
 
-  if (muon_primitive.subsystem() == TriggerPrimitive::kRPC) {
+  if (muon_primitive.subsystem() == TriggerPrimitive::kRPC ||
+      muon_primitive.subsystem() == TriggerPrimitive::kCPPF) {
     const RPCDetId& tp_detId = muon_primitive.detId<RPCDetId>();
-    const RPCData&  tp_data  = muon_primitive.getRPCData();
 
     int tp_region    = tp_detId.region();     // 0 for Barrel, +/-1 for +/- Endcap
     int tp_endcap    = (tp_region == -1) ? 2 : tp_region;
@@ -627,9 +767,6 @@ int PrimitiveSelection::select_rpc(const TriggerPrimitive& muon_primitive) const
     int tp_ring      = tp_detId.ring();       // 2 - 3 (increasing theta)
     int tp_roll      = tp_detId.roll();       // 1 - 3 (decreasing theta; aka A - C; space between rolls is 9 - 15 in theta_fp)
     //int tp_layer     = tp_detId.layer();
-
-    int tp_bx        = tp_data.bx;
-    int tp_strip     = tp_data.strip;
 
     if ( !(tp_region != 0) ) {
       edm::LogWarning("L1T") << "EMTF RPC format error: tp_region = "  << tp_region; return selected; }
@@ -645,11 +782,22 @@ int PrimitiveSelection::select_rpc(const TriggerPrimitive& muon_primitive) const
       edm::LogWarning("L1T") << "EMTF RPC format error: tp_ring = " << tp_ring; return selected; }
     if ( !(1 <= tp_roll && tp_roll <= 3) ) {
       edm::LogWarning("L1T") << "EMTF RPC format error: tp_roll = "  << tp_roll; return selected; }
-    if ( !(1 <= tp_strip && tp_strip <= 32) ) {
-      edm::LogWarning("L1T") << "EMTF RPC format error: tp_data.strip = "   << tp_data.strip; return selected; }
     if ( !(tp_station > 2 || tp_ring != 3) ) {
       edm::LogWarning("L1T") << "EMTF RPC format error: tp_station = " << tp_station << ", tp_ring = " << tp_ring; return selected; }
 
+
+    int tp_bx = -99;
+    if (muon_primitive.subsystem() == TriggerPrimitive::kCPPF) {
+      const CPPFData& tp_data = muon_primitive.getCPPFData();
+      tp_bx = tp_data.bx;
+    }
+    if (muon_primitive.subsystem() == TriggerPrimitive::kRPC) {
+      const RPCData& tp_data = muon_primitive.getRPCData();
+      tp_bx = tp_data.bx;
+      int tp_strip = tp_data.strip;
+      if ( !(1 <= tp_strip && tp_strip <= 32) ) {
+	edm::LogWarning("L1T") << "EMTF RPC format error: tp_data.strip = "   << tp_data.strip; return selected; }
+    }
 
     // Selection
     if (is_in_bx_rpc(tp_bx)) {

@@ -491,6 +491,7 @@ void SectorProcessor::process_single_bx(
   );
 
   std::map<int, TriggerPrimitiveCollection> selected_csc_map;
+  std::map<int, TriggerPrimitiveCollection> selected_cppf_map;
   std::map<int, TriggerPrimitiveCollection> selected_rpc_map;
   std::map<int, TriggerPrimitiveCollection> selected_gem_map;
   std::map<int, TriggerPrimitiveCollection> selected_prim_map;
@@ -513,11 +514,16 @@ void SectorProcessor::process_single_bx(
   // each input link.
   // From src/PrimitiveSelection.cc
   prim_sel.process(CSCTag(), muon_primitives, selected_csc_map);
+  // if (useCPPF_) {
+  prim_sel.process(emtf::CPPFTag(), muon_primitives, selected_cppf_map);
+  // }
   if (useRPC_) {
     prim_sel.process(RPCTag(), muon_primitives, selected_rpc_map);
   }
   prim_sel.process(GEMTag(), muon_primitives, selected_gem_map);
-  prim_sel.merge(selected_csc_map, selected_rpc_map, selected_gem_map, selected_prim_map);
+  prim_sel.merge(selected_csc_map, selected_cppf_map, 
+		 selected_rpc_map, selected_gem_map, 
+		 selected_prim_map);
 
   // Convert trigger primitives into "converted" hits
   // A converted hit consists of integer representations of phi, theta, and zones
@@ -528,11 +534,14 @@ void SectorProcessor::process_single_bx(
   {
     // Keep all the converted hits for the use of data-emulator comparisons.
     // They include the extra ones that are not used in track building and the subsequent steps.
-    prim_sel.merge_no_truncate(selected_csc_map, selected_rpc_map, selected_gem_map, inclusive_selected_prim_map);
+    prim_sel.merge_no_truncate(selected_csc_map, selected_cppf_map, 
+			       selected_rpc_map, selected_gem_map, 
+			       inclusive_selected_prim_map);
     prim_conv.process(inclusive_selected_prim_map, inclusive_conv_hits);
 
     // Clear the input maps to save memory
     selected_csc_map.clear();
+    selected_cppf_map.clear();
     selected_rpc_map.clear();
     selected_gem_map.clear();
   }

@@ -39,6 +39,11 @@ class CSCDetId;
 class RPCDigi;
 class RPCDetId;
 
+namespace l1t {
+  // CPPF digi types
+  class CPPFDigi;
+}
+
 // GEM digi types
 class GEMPadDigi;
 class GEMDetId;
@@ -53,7 +58,7 @@ namespace L1TMuon {
   class TriggerPrimitive {
   public:
     // define the subsystems that we have available
-    enum subsystem_type{kDT,kCSC,kRPC,kGEM,kNSubsystems};
+    enum subsystem_type{kDT,kCSC,kRPC,kCPPF,kGEM,kNSubsystems};
 
     // define the data we save locally from each subsystem type
     // variables in these structs keep their colloquial meaning
@@ -68,6 +73,21 @@ namespace L1TMuon {
       int16_t bx;
       uint16_t valid;
       double time;  // why double?
+    };
+
+    struct CPPFData{
+      CPPFData() : bx(0), phi_int(0), theta_int(0), valid(0), board(0), channel(0),
+                   emtf_sector(0), emtf_link(0), strip_low(0), strip_hi(0) {}
+      uint16_t bx;
+      uint16_t phi_int;
+      uint16_t theta_int;
+      uint16_t valid;
+      uint16_t board;
+      uint16_t channel;
+      uint16_t emtf_sector;
+      uint16_t emtf_link;
+      uint16_t strip_low;
+      uint16_t strip_hi;
     };
 
     struct CSCData {
@@ -153,7 +173,9 @@ namespace L1TMuon {
                      const unsigned strip,
                      const unsigned layer,
                      const int bx);
-
+    //CPPF
+    TriggerPrimitive(const RPCDetId& detid,
+		     const l1t::CPPFDigi& digi);
     // GEM
     TriggerPrimitive(const GEMDetId& detid,
                      const GEMPadDigi& digi);
@@ -190,20 +212,23 @@ namespace L1TMuon {
       IDType detId() const { return IDType(_id); }
 
     // accessors to raw subsystem data
-    void setDTData(const DTData& dt) { _dt = dt; }
-    void setCSCData(const CSCData& csc) { _csc = csc; }
-    void setRPCData(const RPCData& rpc) { _rpc = rpc; }
-    void setGEMData(const GEMData& gem) { _gem = gem; }
+    void setDTData  (const DTData&   dt)   { _dt  = dt;   }
+    void setCSCData (const CSCData&  csc)  { _csc = csc;  }
+    void setRPCData (const RPCData&  rpc)  { _rpc = rpc;  }
+    void setCPPFData(const CPPFData& cppf) { _cppf = cppf;}
+    void setGEMData (const GEMData&  gem)  { _gem = gem;  }
 
-    const DTData  getDTData()  const { return _dt;  }
-    const CSCData getCSCData() const { return _csc; }
-    const RPCData getRPCData() const { return _rpc; }
-    const GEMData getGEMData() const { return _gem; }
+    const DTData   getDTData()   const { return _dt;   }
+    const CSCData  getCSCData()  const { return _csc;  }
+    const RPCData  getRPCData()  const { return _rpc;  }
+    const CPPFData getCPPFData() const { return _cppf; }
+    const GEMData  getGEMData()  const { return _gem;  }
 
-    DTData&  accessDTData()  { return _dt; }
-    CSCData& accessCSCData() { return _csc; }
-    RPCData& accessRPCData() { return _rpc; }
-    GEMData& accessGEMData() { return _gem; }
+    DTData&   accessDTData()   { return _dt;   }
+    CSCData&  accessCSCData()  { return _csc;  }
+    RPCData&  accessRPCData()  { return _rpc;  }
+    CPPFData& accessCPPFData() { return _cppf; }
+    GEMData&  accessGEMData()  { return _gem;  }
 
     // consistent accessors to common information
     const int getBX() const;
@@ -229,10 +254,11 @@ namespace L1TMuon {
         subsector = 0;
       }
 
-    DTData  _dt;
-    CSCData _csc;
-    RPCData _rpc;
-    GEMData _gem;
+    DTData   _dt;
+    CSCData  _csc;
+    RPCData  _rpc;
+    CPPFData _cppf;
+    GEMData  _gem;
 
     DetId _id;
 

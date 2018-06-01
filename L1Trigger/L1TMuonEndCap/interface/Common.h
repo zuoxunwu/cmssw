@@ -38,6 +38,7 @@ typedef L1TMuon::TTTriggerPrimitive           TTTriggerPrimitive;
 typedef L1TMuon::TTTriggerPrimitiveCollection TTTriggerPrimitiveCollection;
 
 typedef TriggerPrimitive::CSCData   CSCData;
+typedef TriggerPrimitive::CPPFData  CPPFData;
 typedef TriggerPrimitive::RPCData   RPCData;
 typedef TriggerPrimitive::GEMData   GEMData;
 typedef TTTriggerPrimitive::TTData  TTData;

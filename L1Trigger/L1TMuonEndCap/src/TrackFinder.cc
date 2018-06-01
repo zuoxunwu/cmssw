@@ -13,15 +13,17 @@ TrackFinder::TrackFinder(const edm::ParameterSet& iConfig, edm::ConsumesCollecto
     pt_assign_engine_(),
     sector_processors_(),
     config_(iConfig),
-    tokenCSC_(iConsumes.consumes<CSCTag::digi_collection>(iConfig.getParameter<edm::InputTag>("CSCInput"))),
-    tokenRPC_(iConsumes.consumes<RPCTag::digi_collection>(iConfig.getParameter<edm::InputTag>("RPCInput"))),
-    tokenGEM_(iConsumes.consumes<GEMTag::digi_collection>(iConfig.getParameter<edm::InputTag>("GEMInput"))),
+    tokenCSC_ (iConsumes.consumes<CSCTag::digi_collection>(iConfig.getParameter<edm::InputTag>("CSCInput"))),
+    tokenCPPF_(iConsumes.consumes<emtf::CPPFTag::digi_collection>(iConfig.getParameter<edm::InputTag>("CPPFInput"))),
+    tokenRPC_ (iConsumes.consumes<RPCTag::digi_collection>(iConfig.getParameter<edm::InputTag>("RPCInput"))),
+    tokenGEM_ (iConsumes.consumes<GEMTag::digi_collection>(iConfig.getParameter<edm::InputTag>("GEMInput"))),
     verbose_(iConfig.getUntrackedParameter<int>("verbosity")),
     primConvLUT_(iConfig.getParameter<edm::ParameterSet>("spPCParams16").getParameter<int>("PrimConvLUT")),
     fwConfig_(iConfig.getParameter<bool>("FWConfig")),
-    useCSC_(iConfig.getParameter<bool>("CSCEnable")),
-    useRPC_(iConfig.getParameter<bool>("RPCEnable")),
-    useGEM_(iConfig.getParameter<bool>("GEMEnable")),
+    useCSC_ (iConfig.getParameter<bool>("CSCEnable")),
+    useCPPF_(iConfig.getParameter<bool>("CPPFEnable")),
+    useRPC_ (iConfig.getParameter<bool>("RPCEnable")),
+    useGEM_ (iConfig.getParameter<bool>("GEMEnable")),
     era_(iConfig.getParameter<std::string>("Era"))
 {
 
@@ -131,11 +133,13 @@ void TrackFinder::process(
 
   EMTFSubsystemCollector collector;
   if (useCSC_)
-    collector.extractPrimitives(CSCTag(), iEvent, tokenCSC_, muon_primitives);
+    collector.extractPrimitives(CSCTag(),  iEvent, tokenCSC_,  muon_primitives);
+  if (useCPPF_)
+    collector.extractPrimitives(emtf::CPPFTag(), iEvent, tokenCPPF_, muon_primitives);
   if (useRPC_)
-    collector.extractPrimitives(RPCTag(), iEvent, tokenRPC_, muon_primitives);
+    collector.extractPrimitives(RPCTag(),  iEvent, tokenRPC_,  muon_primitives);
   if (useGEM_)
-    collector.extractPrimitives(GEMTag(), iEvent, tokenGEM_, muon_primitives);
+    collector.extractPrimitives(GEMTag(),  iEvent, tokenGEM_,  muon_primitives);
 
   // Check trigger primitives
   if (verbose_ > 2) {  // debug

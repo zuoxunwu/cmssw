@@ -5,6 +5,7 @@
 #include "DataFormats/L1DTTrackFinder/interface/L1MuDTChambPhDigi.h"
 #include "DataFormats/L1DTTrackFinder/interface/L1MuDTChambThDigi.h"
 #include "DataFormats/RPCDigi/interface/RPCDigi.h"
+#include "DataFormats/L1TMuon/interface/CPPFDigi.h"
 #include "DataFormats/GEMDigi/interface/GEMPadDigi.h"
 #include "DataFormats/GEMDigi/interface/ME0PadDigi.h"
 
@@ -18,7 +19,7 @@
 using namespace L1TMuon;
 
 namespace {
-  const char subsystem_names[][4] = {"DT","CSC","RPC","GEM"};
+  const char subsystem_names[][5] = {"DT","CSC","RPC","CPPF","GEM"};
 }
 
 //constructors from DT data
@@ -155,6 +156,24 @@ TriggerPrimitive::TriggerPrimitive(const RPCDetId& detid,
   _rpc.time = -999999.;
 }
 
+//constructor from CPPF Data
+TriggerPrimitive::TriggerPrimitive(const RPCDetId& detid,
+				   const l1t::CPPFDigi& digi):
+  _id(detid),
+  _subsystem(TriggerPrimitive::kCPPF) {
+  calculateGlobalSector(detid,_globalsector,_subsector);
+  _cppf.bx           = digi.bx();
+  _cppf.phi_int      = digi.phi_int();
+  _cppf.theta_int    = digi.theta_int();
+  _cppf.valid        = digi.valid();
+  _cppf.board        = digi.board();
+  _cppf.channel      = digi.channel();
+  _cppf.emtf_sector  = digi.emtf_sector();
+  _cppf.emtf_link    = digi.emtf_link();
+  _cppf.strip_low    = digi.first_strip();
+  _cppf.strip_hi     = digi.first_strip() + digi.cluster_size() - 1;
+}
+
 
 // constructor from GEM data
 TriggerPrimitive::TriggerPrimitive(const GEMDetId& detid,
@@ -187,6 +206,7 @@ TriggerPrimitive::TriggerPrimitive(const TriggerPrimitive& tp):
   _dt(tp._dt),
   _csc(tp._csc),
   _rpc(tp._rpc),
+  _cppf(tp._cppf),
   _gem(tp._gem),
   _id(tp._id),
   _subsystem(tp._subsystem),
@@ -202,6 +222,7 @@ TriggerPrimitive& TriggerPrimitive::operator=(const TriggerPrimitive& tp) {
   this->_dt = tp._dt;
   this->_csc = tp._csc;
   this->_rpc = tp._rpc;
+  this->_cppf = tp._cppf;
   this->_gem = tp._gem;
   this->_id = tp._id;
   this->_subsystem = tp._subsystem;
@@ -247,6 +268,9 @@ bool TriggerPrimitive::operator==(const TriggerPrimitive& tp) const {
            this->_rpc.bx == tp._rpc.bx &&
            this->_rpc.valid == tp._rpc.valid &&
            //this->_rpc.time == tp._rpc.time &&
+	   this->_cppf.bx == tp._cppf.bx &&
+           this->_cppf.theta_int == tp._cppf.theta_int &&
+           this->_cppf.phi_int == tp._cppf.phi_int &&
            this->_gem.pad == tp._gem.pad &&
            this->_gem.pad_low == tp._gem.pad_low &&
            this->_gem.pad_hi == tp._gem.pad_hi &&
@@ -267,6 +291,8 @@ const int TriggerPrimitive::getBX() const {
     return _csc.bx;
   case kRPC:
     return _rpc.bx;
+  case kCPPF:
+    return _cppf.bx;
   case kGEM:
     return _gem.bx;
   default:
@@ -285,6 +311,8 @@ const int TriggerPrimitive::getStrip() const {
     return _csc.strip;
   case kRPC:
     return _rpc.strip;
+  case kCPPF:
+    return (_cppf.strip_low + _cppf.strip_hi) / 2;
   case kGEM:
     return _gem.pad;
   default:
@@ -303,6 +331,8 @@ const int TriggerPrimitive::getWire() const {
     return _csc.keywire;
   case kRPC:
     return -1;
+  case kCPPF:
+    return -1;
   case kGEM:
     return -1;
   default:
@@ -320,6 +350,8 @@ const int TriggerPrimitive::getPattern() const {
   case kCSC:
     return _csc.pattern;
   case kRPC:
+    return -1;
+  case kCPPF:
     return -1;
   case kGEM:
     return -1;
@@ -375,6 +407,8 @@ void TriggerPrimitive::print(std::ostream& out) const {
     out << "Valid         : " << _rpc.valid << std::endl;
     out << "Time          : " << _rpc.time << std::endl;
     break;
+  case kCPPF:
+    out << detId<RPCDetId>() << std::endl;
   case kGEM:
     if (!_gem.isME0)
       out << detId<GEMDetId>() << std::endl;

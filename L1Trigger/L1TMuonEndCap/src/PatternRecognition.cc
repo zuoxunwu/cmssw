@@ -302,6 +302,9 @@ bool PatternRecognition::is_zone_empty(
       if (not(conv_hits_it->PC_segment() <= 4))  // With 2 unique LCTs per chamber, 4 possible strip/wire combinations
 	{ edm::LogError("L1T") << "conv_hits_it->PC_segment() = " << conv_hits_it->PC_segment(); return true; }
       
+      if (conv_hits_it->Subsystem() == TriggerPrimitive::kCPPF)
+        continue;  // Don't use CPPF hits for pattern formation
+
       if (conv_hits_it->Subsystem() == TriggerPrimitive::kRPC)
         continue;  // Don't use RPC hits for pattern formation
 
@@ -341,6 +344,9 @@ void PatternRecognition::make_zone_image(
     EMTFHitCollection::const_iterator conv_hits_end = ext_conv_hits_it->end();
 
     for (; conv_hits_it != conv_hits_end; ++conv_hits_it) {
+      if (conv_hits_it->Subsystem() == TriggerPrimitive::kCPPF)
+        continue;  // Don't use CPPF hits for pattern formation
+
       if (conv_hits_it->Subsystem() == TriggerPrimitive::kRPC)
         continue;  // Don't use RPC hits for pattern formation
 

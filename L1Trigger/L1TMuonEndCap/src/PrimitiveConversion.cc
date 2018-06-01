@@ -69,6 +69,8 @@ void PrimitiveConversion::process(
       EMTFHit conv_hit;
       if (tp_it->subsystem() == TriggerPrimitive::kCSC) {
         convert_csc(pc_sector, pc_station, pc_chamber, pc_segment, *tp_it, conv_hit);
+      } else if (tp_it->subsystem() == TriggerPrimitive::kCPPF) {
+        convert_rpc(pc_sector, pc_station, pc_chamber, pc_segment, *tp_it, conv_hit);
       } else if (tp_it->subsystem() == TriggerPrimitive::kRPC) {
         convert_rpc(pc_sector, pc_station, pc_chamber, pc_segment, *tp_it, conv_hit);
       } else if (tp_it->subsystem() == TriggerPrimitive::kGEM) {
@@ -452,7 +454,6 @@ void PrimitiveConversion::convert_rpc(
     EMTFHit& conv_hit
 ) const {
   const RPCDetId& tp_detId = muon_primitive.detId<RPCDetId>();
-  const RPCData&  tp_data  = muon_primitive.getRPCData();
 
   int tp_region    = tp_detId.region();     // 0 for Barrel, +/-1 for +/- Endcap
   int tp_endcap    = (tp_region == -1) ? 2 : tp_region;
@@ -463,10 +464,34 @@ void PrimitiveConversion::convert_rpc(
   int tp_roll      = tp_detId.roll();       // 1 - 3 (decreasing theta; aka A - C; space between rolls is 9 - 15 in theta_fp)
   //int tp_layer     = tp_detId.layer();      // Always 1 in the Endcap, 1 or 2 in the Barrel
 
-  int tp_bx        = tp_data.bx;
-  int tp_strip     = ((tp_data.strip_low + tp_data.strip_hi) / 2);  // in full-strip unit
-  int tp_valid     = tp_data.valid;
 
+  int tp_bx        = -99;
+  int tp_strip     = -99;
+  int tp_strip_hi  = -99;
+  int tp_strip_low = -99;
+  int tp_valid     = -99;
+  int fph          = -99;
+  int th           = -99;
+
+  bool isCPPF = (muon_primitive.subsystem() == TriggerPrimitive::kCPPF);
+  // std::cout << "isCPPF = " << isCPPF << std::endl;
+
+  if (isCPPF) {
+    const CPPFData& tp_data = muon_primitive.getCPPFData();
+    tp_bx        = tp_data.bx;
+    tp_valid     = tp_data.valid;
+    fph          = tp_data.phi_int * 4;
+    th           = tp_data.theta_int * 4;
+    // std::cout << "  * fph = " << fph << ", th = " << th << std::endl;
+  } else {
+    const RPCData&  tp_data  = muon_primitive.getRPCData();
+    tp_bx        = tp_data.bx;
+    tp_strip_hi  = tp_data.strip_hi;
+    tp_strip_low = tp_data.strip_low;
+    tp_strip     = ((tp_strip_low + tp_strip_hi) / 2); // in full-strip unit
+    tp_valid     = tp_data.valid;
+  }
+    
   const bool is_neighbor = (pc_station == 5);
 
   // CSC-like sector, subsector and chamber numbers
@@ -504,13 +529,13 @@ void PrimitiveConversion::convert_rpc(
 
   conv_hit.set_valid         ( tp_valid );
   conv_hit.set_strip         ( tp_strip );
-  conv_hit.set_strip_low     ( tp_data.strip_low );
-  conv_hit.set_strip_hi      ( tp_data.strip_hi );
+  conv_hit.set_strip_low     ( tp_strip_low );
+  conv_hit.set_strip_hi      ( tp_strip_hi );
   //conv_hit.set_wire          ( tp_data.keywire );
   //conv_hit.set_quality       ( tp_data.quality );
   conv_hit.set_pattern       ( 0 );  // In firmware, this marks RPC stub
   //conv_hit.set_bend          ( tp_data.bend );
-  conv_hit.set_time          ( tp_data.time );
+  //conv_hit.set_time          ( tp_data.time );
   //conv_hit.set_alct_quality  ( tp_data.alct_quality );
   //conv_hit.set_clct_quality  ( tp_data.clct_quality );
 
@@ -519,7 +544,7 @@ void PrimitiveConversion::convert_rpc(
 
 
   // Get coordinates from fullsim since LUTs do not exist yet
-  bool use_fullsim_coords = true;
+  bool use_fullsim_coords = false;
   if (use_fullsim_coords) {
     const GlobalPoint& gp = tp_geom_->getGlobalPoint(muon_primitive);
     double glob_phi   = emtf::rad_to_deg(gp.phi().value());
@@ -535,8 +560,8 @@ void PrimitiveConversion::convert_rpc(
     // NOTE: fph and th are recalculated using CPPF LUTs in the convert_rpc_details() function,
     //       this part is still kept because it is needed for Phase 2 iRPC hits.
     //
-    int fph = emtf::calc_phi_loc_int_rpc(glob_phi, conv_hit.PC_sector());
-    int th  = emtf::calc_theta_int_rpc(glob_theta, conv_hit.Endcap());
+    fph = emtf::calc_phi_loc_int_rpc(glob_phi, conv_hit.PC_sector());
+    th  = emtf::calc_theta_int_rpc(glob_theta, conv_hit.Endcap());
 
     if (not(0 <= fph && fph < 1250))
       { edm::LogError("L1T") << "fph = " << fph; return; }
@@ -556,15 +581,17 @@ void PrimitiveConversion::convert_rpc(
     conv_hit.set_eta_sim   ( glob_eta );
     conv_hit.set_rho_sim   ( glob_rho );
     conv_hit.set_z_sim     ( glob_z );
-
-    conv_hit.set_phi_fp    ( fph ); // Full-precision integer phi
-    conv_hit.set_theta_fp  ( th );  // Full-precision integer theta
   }
 
-  convert_rpc_details(conv_hit);
+  conv_hit.set_phi_fp    ( fph ); // Full-precision integer phi
+  conv_hit.set_theta_fp  ( th );  // Full-precision integer theta
+
+  convert_rpc_details(conv_hit, !isCPPF);
+
+  // std::cout << "  * Final phi_fp = " << conv_hit.Phi_fp() << ", theta_fp = " << conv_hit.Theta_fp() << std::endl;
 }
 
-void PrimitiveConversion::convert_rpc_details(EMTFHit& conv_hit) const {
+void PrimitiveConversion::convert_rpc_details(EMTFHit& conv_hit, const bool use_cppf_lut) const {
   const bool is_neighbor = conv_hit.Neighbor();
 
   const int pc_station = conv_hit.PC_station();
@@ -591,8 +618,7 @@ void PrimitiveConversion::convert_rpc_details(EMTFHit& conv_hit) const {
   int fph = conv_hit.Phi_fp();
   int th  = conv_hit.Theta_fp();
 
-  bool use_cppf_coords = true;
-  if (use_cppf_coords) {
+  if (use_cppf_lut) {
     int halfstrip = (conv_hit.Strip_low() + conv_hit.Strip_hi() - 1);
     if (not(1 <= halfstrip && halfstrip <= 64))
       { edm::LogError("L1T") << "halfstrip = " << halfstrip; return; }
