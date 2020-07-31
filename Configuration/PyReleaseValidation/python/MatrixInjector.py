@@ -1,13 +1,17 @@
+from __future__ import print_function
 import sys
 import json
 import os
 import copy
 import multiprocessing
 import time
+import re
+
+MAXWORKFLOWLENGTH = 81
 
 def performInjectionOptionTest(opt):
     if opt.show:
-        print 'Not injecting to wmagent in --show mode. Need to run the worklfows.'
+        print('Not injecting to wmagent in --show mode. Need to run the worklfows.')
         sys.exit(-1)
     if opt.wmcontrol=='init':
         #init means it'll be in test mode
@@ -16,10 +20,10 @@ def performInjectionOptionTest(opt):
         #means the wf were created already, and we just dryRun it.
         opt.dryRun=True
     if opt.wmcontrol=='submit' and opt.nProcs==0:
-        print 'Not injecting to wmagent in -j 0 mode. Need to run the worklfows.'
+        print('Not injecting to wmagent in -j 0 mode. Need to run the worklfows.')
         sys.exit(-1)
     if opt.wmcontrol=='force':
-        print "This is an expert setting, you'd better know what you're doing"
+        print("This is an expert setting, you'd better know what you're doing")
         opt.dryRun=True
 
 def upload_to_couch_oneArg(arguments):
@@ -52,6 +56,10 @@ class MatrixInjector(object):
         self.keep = opt.keep
         self.memoryOffset = opt.memoryOffset
         self.memPerCore = opt.memPerCore
+        self.numberEventsInLuminosityBlock = opt.numberEventsInLuminosityBlock
+        self.numberOfStreams = 0
+        if(opt.nStreams>0):
+            self.numberOfStreams = opt.nStreams
         self.batchName = ''
         self.batchTime = str(int(time.time()))
         if(opt.batchName):
@@ -80,15 +88,15 @@ class MatrixInjector(object):
         self.speciallabel=''
         if opt.label:
             self.speciallabel= '_'+opt.label
-
+        self.longWFName = []
 
         if not os.getenv('WMCORE_ROOT'):
-            print '\n\twmclient is not setup properly. Will not be able to upload or submit requests.\n'
+            print('\n\twmclient is not setup properly. Will not be able to upload or submit requests.\n')
             if not self.testMode:
-                print '\n\t QUIT\n'
+                print('\n\t QUIT\n')
                 sys.exit(-18)
         else:
-            print '\n\tFound wmclient\n'
+            print('\n\tFound wmclient\n')
             
         self.defaultChain={
             "RequestType" :    "TaskChain",                    #this is how we handle relvals
@@ -110,7 +118,7 @@ class MatrixInjector(object):
             "Multicore" : 1,   # do not set multicore for the whole chain
             "Memory" : 3000,
             "SizePerEvent" : 1234,
-            "TimePerEvent" : 0.1,
+            "TimePerEvent" : 10,
             "PrepID": os.getenv('CMSSW_VERSION')
             }
 
@@ -127,11 +135,13 @@ class MatrixInjector(object):
             "GlobalTag": None,
             "SplittingAlgo"  : "EventBased",             #Splitting Algorithm
             "EventsPerJob" : None,                       #Size of jobs in terms of splitting algorithm
+            "EventsPerLumi" : None,
             "RequestNumEvents" : None,                      #Total number of events to generate
             "Seeding" : "AutomaticSeeding",                          #Random seeding method
             "PrimaryDataset" : None,                          #Primary Dataset to be created
             "nowmIO": {},
             "Multicore" : opt.nThreads,                  # this is the per-taskchain Multicore; it's the default assigned to a task if it has no value specified 
+            "EventStreams": self.numberOfStreams,
             "KeepOutput" : False
             }
         self.defaultInput={
@@ -143,6 +153,7 @@ class MatrixInjector(object):
             "LumisPerJob" : 10,               #Size of jobs in terms of splitting algorithm
             "nowmIO": {},
             "Multicore" : opt.nThreads,                       # this is the per-taskchain Multicore; it's the default assigned to a task if it has no value specified 
+            "EventStreams": self.numberOfStreams,
             "KeepOutput" : False
             }
         self.defaultTask={
@@ -155,6 +166,7 @@ class MatrixInjector(object):
             "LumisPerJob" : 10,               #Size of jobs in terms of splitting algorithm
             "nowmIO": {},
             "Multicore" : opt.nThreads,                       # this is the per-taskchain Multicore; it's the default assigned to a task if it has no value specified 
+            "EventStreams": self.numberOfStreams,
             "KeepOutput" : False
             }
 
@@ -207,11 +219,46 @@ class MatrixInjector(object):
             wmsplit['RECODR2_2016reHLT_skimMET_HIPM']=1
             wmsplit['RECODR2_2016reHLT_skimSinglePh_HIPM']=1
             wmsplit['RECODR2_2016reHLT_skimMuOnia_HIPM']=1
+            wmsplit['RECODR2_2017reHLT_Prompt']=1
             wmsplit['RECODR2_2017reHLT_skimSingleMu_Prompt_Lumi']=1
+            wmsplit['RECODR2_2017reHLT_skimDoubleEG_Prompt']=1
+            wmsplit['RECODR2_2017reHLT_skimMET_Prompt']=1
+            wmsplit['RECODR2_2017reHLT_skimMuOnia_Prompt']=1
+            wmsplit['RECODR2_2017reHLT_Prompt_L1TEgDQM']=1
+            wmsplit['RECODR2_2018reHLT_Prompt']=1
+            wmsplit['RECODR2_2018reHLT_skimSingleMu_Prompt_Lumi']=1
+            wmsplit['RECODR2_2018reHLT_skimDoubleEG_Prompt']=1
+            wmsplit['RECODR2_2018reHLT_skimJetHT_Prompt']=1
+            wmsplit['RECODR2_2018reHLT_skimMET_Prompt']=1
+            wmsplit['RECODR2_2018reHLT_skimMuOnia_Prompt']=1
+            wmsplit['RECODR2_2018reHLT_skimEGamma_Prompt_L1TEgDQM']=1
+            wmsplit['RECODR2_2018reHLT_skimMuonEG_Prompt']=1
+            wmsplit['RECODR2_2018reHLT_skimCharmonium_Prompt']=1
+            wmsplit['RECODR2_2018reHLT_skimJetHT_Prompt_HEfail']=1
+            wmsplit['RECODR2_2018reHLT_skimJetHT_Prompt_BadHcalMitig']=1
+            wmsplit['RECODR2_2018reHLTAlCaTkCosmics_Prompt']=1
+            wmsplit['RECODR2_2018reHLT_skimDisplacedJet_Prompt']=1
+            wmsplit['RECODR2_2018reHLT_ZBPrompt']=1
+            wmsplit['RECODR2_2018reHLT_Offline']=1
+            wmsplit['RECODR2_2018reHLT_skimSingleMu_Offline_Lumi']=1
+            wmsplit['RECODR2_2018reHLT_skimDoubleEG_Offline']=1
+            wmsplit['RECODR2_2018reHLT_skimJetHT_Offline']=1
+            wmsplit['RECODR2_2018reHLT_skimMET_Offline']=1
+            wmsplit['RECODR2_2018reHLT_skimMuOnia_Offline']=1
+            wmsplit['RECODR2_2018reHLT_skimEGamma_Offline_L1TEgDQM']=1
+            wmsplit['RECODR2_2018reHLT_skimMuonEG_Offline']=1
+            wmsplit['RECODR2_2018reHLT_skimCharmonium_Offline']=1
+            wmsplit['RECODR2_2018reHLT_skimJetHT_Offline_HEfail']=1
+            wmsplit['RECODR2_2018reHLT_skimJetHT_Offline_BadHcalMitig']=1
+            wmsplit['RECODR2_2018reHLTAlCaTkCosmics_Offline']=1
+            wmsplit['RECODR2_2018reHLT_skimDisplacedJet_Offline']=1
+            wmsplit['RECODR2_2018reHLT_ZBOffline']=1
             wmsplit['HLTDR2_50ns']=1
             wmsplit['HLTDR2_25ns']=1
             wmsplit['HLTDR2_2016']=1
             wmsplit['HLTDR2_2017']=1
+            wmsplit['HLTDR2_2018']=1
+            wmsplit['HLTDR2_2018_BadHcalMitig']=1
             wmsplit['Hadronizer']=1
             wmsplit['DIGIUP15']=1 
             wmsplit['RECOUP15']=1 
@@ -222,26 +269,39 @@ class MatrixInjector(object):
             wmsplit['DigiFullPU']=1
             wmsplit['RecoFullPU']=1
             wmsplit['RECOHID11']=1
-            wmsplit['DigiFullTriggerPU_2023D17PU'] = 1 
-            wmsplit['RecoFullGlobalPU_2023D17PU']=1
             wmsplit['DIGIUP17']=1
             wmsplit['RECOUP17']=1
             wmsplit['DIGIUP17_PU25']=1
             wmsplit['RECOUP17_PU25']=1
+            wmsplit['DIGICOS_UP16']=1
+            wmsplit['RECOCOS_UP16']=1
             wmsplit['DIGICOS_UP17']=1
             wmsplit['RECOCOS_UP17']=1
-
-                                    
+            wmsplit['DIGICOS_UP18']=1
+            wmsplit['RECOCOS_UP18']=1
+            wmsplit['DIGICOS_UP21']=1
+            wmsplit['RECOCOS_UP21']=1
+            wmsplit['HYBRIDRepackHI2015VR']=1
+            wmsplit['HYBRIDZSHI2015']=1
+            wmsplit['RECOHID15']=1
+            wmsplit['RECOHID18']=1
+            # automate for phase 2
+            from .upgradeWorkflowComponents import upgradeKeys
+            for key in upgradeKeys[2026]:
+                if not "PU" in key: continue
+                wmsplit['DigiFullTriggerPU_'+key] = 1
+                wmsplit['RecoFullGlobalPU_'+key] = 1
+                         
             #import pprint
             #pprint.pprint(wmsplit)            
         except:
-            print "Not set up for step splitting"
+            print("Not set up for step splitting")
             wmsplit={}
 
         acqEra=False
         for (n,dir) in directories.items():
             chainDict=copy.deepcopy(self.defaultChain)
-            print "inspecting",dir
+            print("inspecting",dir)
             nextHasDSInput=None
             for (x,s) in mReader.workFlowSteps.items():
                 #x has the format (num, prefix)
@@ -261,6 +321,7 @@ class MatrixInjector(object):
                         thisLabel=thisLabel+"_dblMiniAOD"
                     processStrPrefix=''
                     setPrimaryDs=None
+                    nanoedmGT=''
                     for step in s[3]:
                         
                         if 'INPUT' in step or (not isinstance(s[2][index],str)):
@@ -274,18 +335,26 @@ class MatrixInjector(object):
                                 try:
                                     chainDict['nowmTasklist'][-1]['nowmIO']=json.loads(open('%s/%s.io'%(dir,step)).read())
                                 except:
-                                    print "Failed to find",'%s/%s.io'%(dir,step),".The workflows were probably not run on cfg not created"
+                                    print("Failed to find",'%s/%s.io'%(dir,step),".The workflows were probably not run on cfg not created")
                                     return -15
 
                                 chainDict['nowmTasklist'][-1]['PrimaryDataset']='RelVal'+s[1].split('+')[0]
                                 if not '--relval' in s[2][index]:
-                                    print 'Impossible to create task from scratch without splitting information with --relval'
+                                    print('Impossible to create task from scratch without splitting information with --relval')
                                     return -12
                                 else:
                                     arg=s[2][index].split()
-                                    ns=map(int,arg[arg.index('--relval')+1].split(','))
+                                    ns=list(map(int,arg[len(arg) - arg[-1::-1].index('--relval')].split(',')))
                                     chainDict['nowmTasklist'][-1]['RequestNumEvents'] = ns[0]
                                     chainDict['nowmTasklist'][-1]['EventsPerJob'] = ns[1]
+                                    chainDict['nowmTasklist'][-1]['EventsPerLumi'] = ns[1]
+                                    #overwrite EventsPerLumi if numberEventsInLuminosityBlock is set in cmsDriver
+                                    if 'numberEventsInLuminosityBlock' in s[2][index]:
+                                        nEventsInLuminosityBlock = re.findall('process.source.numberEventsInLuminosityBlock=cms.untracked.uint32\(([ 0-9 ]*)\)', s[2][index],re.DOTALL)
+                                        if nEventsInLuminosityBlock[-1].isdigit() and int(nEventsInLuminosityBlock[-1]) < ns[1]:
+                                            chainDict['nowmTasklist'][-1]['EventsPerLumi'] = int(nEventsInLuminosityBlock[-1])
+                                    if(self.numberEventsInLuminosityBlock > 0 and self.numberEventsInLuminosityBlock <= ns[1]):
+                                        chainDict['nowmTasklist'][-1]['EventsPerLumi'] = self.numberEventsInLuminosityBlock
                                 if 'FASTSIM' in s[2][index] or '--fast' in s[2][index]:
                                     thisLabel+='_FastSim'
                                 if 'lhe' in s[2][index] in s[2][index]:
@@ -296,9 +365,11 @@ class MatrixInjector(object):
                                 try:
                                     chainDict['nowmTasklist'][-1]['nowmIO']=json.loads(open('%s/%s.io'%(dir,step)).read())
                                 except:
-                                    print "Failed to find",'%s/%s.io'%(dir,step),".The workflows were probably not run on cfg not created"
+                                    print("Failed to find",'%s/%s.io'%(dir,step),".The workflows were probably not run on cfg not created")
                                     return -15
                                 chainDict['nowmTasklist'][-1]['InputDataset']=nextHasDSInput.dataSet
+                                if ('DQMHLTonRAWAOD' in step) :
+                                    chainDict['nowmTasklist'][-1]['IncludeParents']=True
                                 splitForThisWf=nextHasDSInput.split
                                 chainDict['nowmTasklist'][-1]['LumisPerJob']=splitForThisWf
                                 if step in wmsplit:
@@ -312,7 +383,7 @@ class MatrixInjector(object):
                                 if '--data' in s[2][index] and nextHasDSInput.label:
                                     thisLabel+='_RelVal_%s'%nextHasDSInput.label
                                 if 'filter' in chainDict['nowmTasklist'][-1]['nowmIO']:
-                                    print "This has an input DS and a filter sequence: very likely to be the PyQuen sample"
+                                    print("This has an input DS and a filter sequence: very likely to be the PyQuen sample")
                                     processStrPrefix='PU_'
                                     setPrimaryDs = 'RelVal'+s[1].split('+')[0]
                                     if setPrimaryDs:
@@ -324,7 +395,7 @@ class MatrixInjector(object):
                                 try:
                                     chainDict['nowmTasklist'][-1]['nowmIO']=json.loads(open('%s/%s.io'%(dir,step)).read())
                                 except:
-                                    print "Failed to find",'%s/%s.io'%(dir,step),".The workflows were probably not run on cfg not created"
+                                    print("Failed to find",'%s/%s.io'%(dir,step),".The workflows were probably not run on cfg not created")
                                     return -15
                                 if splitForThisWf:
                                     chainDict['nowmTasklist'][-1]['LumisPerJob']=splitForThisWf
@@ -342,6 +413,10 @@ class MatrixInjector(object):
                             chainDict['nowmTasklist'][-1]['ConfigCacheID']='%s/%s.py'%(dir,step)
                             chainDict['nowmTasklist'][-1]['GlobalTag']=chainDict['nowmTasklist'][-1]['nowmIO']['GT'] # copy to the proper parameter name
                             chainDict['GlobalTag']=chainDict['nowmTasklist'][-1]['nowmIO']['GT'] #set in general to the last one of the chain
+                            if 'NANOEDM' in step :
+                                nanoedmGT = chainDict['nowmTasklist'][-1]['nowmIO']['GT']
+                            if 'NANOMERGE' in step :
+                                chainDict['GlobalTag'] = nanoedmGT
                             if 'pileup' in chainDict['nowmTasklist'][-1]['nowmIO']:
                                 chainDict['nowmTasklist'][-1]['MCPileup']=chainDict['nowmTasklist'][-1]['nowmIO']['pileup']
                             if '--pileup ' in s[2][index]:      # catch --pileup (scenarion) and not --pileup_ (dataset to be mixed) => works also making PRE-MIXed dataset
@@ -350,7 +425,7 @@ class MatrixInjector(object):
                                     processStrPrefix='PU25ns_'
                                 elif   (  s[2][index].split()[  s[2][index].split().index('--pileup')+1 ]  ).find('50ns')  > 0 :
                                     processStrPrefix='PU50ns_'
-                            if 'DIGIPREMIX_S2' in s[2][index] : # take care of pu overlay done with DIGI mixing of premixed events
+                            if 'premix_stage2' in s[2][index] and '--pileup_input' in s[2][index]: # take care of pu overlay done with DIGI mixing of premixed events
                                 if s[2][index].split()[ s[2][index].split().index('--pileup_input')+1  ].find('25ns')  > 0 :
                                     processStrPrefix='PUpmx25ns_'
                                 elif s[2][index].split()[ s[2][index].split().index('--pileup_input')+1  ].find('50ns')  > 0 :
@@ -360,10 +435,14 @@ class MatrixInjector(object):
                                 #chainDict['AcquisitionEra'][step]=(chainDict['CMSSWVersion']+'-PU_'+chainDict['nowmTasklist'][-1]['GlobalTag']).replace('::All','')+thisLabel
                                 chainDict['AcquisitionEra'][step]=chainDict['CMSSWVersion']
                                 chainDict['ProcessingString'][step]=processStrPrefix+chainDict['nowmTasklist'][-1]['GlobalTag'].replace('::All','').replace('-','_')+thisLabel
+                                if 'NANOMERGE' in step :
+                                    chainDict['ProcessingString'][step]=processStrPrefix+nanoedmGT.replace('::All','').replace('-','_')+thisLabel
                             else:
                                 #chainDict['nowmTasklist'][-1]['AcquisitionEra']=(chainDict['CMSSWVersion']+'-PU_'+chainDict['nowmTasklist'][-1]['GlobalTag']).replace('::All','')+thisLabel
                                 chainDict['nowmTasklist'][-1]['AcquisitionEra']=chainDict['CMSSWVersion']
                                 chainDict['nowmTasklist'][-1]['ProcessingString']=processStrPrefix+chainDict['nowmTasklist'][-1]['GlobalTag'].replace('::All','').replace('-','_')+thisLabel
+                                if 'NANOMERGE' in step :
+                                    chainDict['nowmTasklist'][-1]['ProcessingString']=processStrPrefix+nanoedmGT.replace('::All','').replace('-','_')+thisLabel
 
                             if (self.batchName):
                                 chainDict['nowmTasklist'][-1]['Campaign'] = chainDict['nowmTasklist'][-1]['AcquisitionEra']+self.batchName
@@ -386,6 +465,10 @@ class MatrixInjector(object):
                     chainDict['RequestString']='RV'+chainDict['CMSSWVersion']+s[1].split('+')[0]
                     if processStrPrefix or thisLabel:
                         chainDict['RequestString']+='_'+processStrPrefix+thisLabel
+                    #check candidate WF name
+                    self.candidateWFName = self.user+'_'+chainDict['RequestString']
+                    if (len(self.candidateWFName)>MAXWORKFLOWLENGTH):
+                        self.longWFName.append(self.candidateWFName)
 
 ### PrepID
                     chainDict['PrepID'] = chainDict['CMSSWVersion']+'__'+self.batchTime+'-'+s[1].split('+')[0]
@@ -410,11 +493,19 @@ class MatrixInjector(object):
                         for (om,o) in t_input['nowmIO'].items():
                             if primary in o:
                                 #print "found",primary,"procuced by",om,"of",t_input['TaskName']
+                                #ad-hoc fix due to restriction in TaskName of 50 characters
+                                if (len(t_input['TaskName'])>50):
+                                    if (t_input['TaskName'].find('GenSim') != -1):
+                                        t_input['TaskName'] = 'GenSimFull'
+                                    if (t_input['TaskName'].find('Hadronizer') != -1):
+                                        t_input['TaskName'] = 'HadronizerFull'
                                 t_second['InputTask'] = t_input['TaskName']
                                 t_second['InputFromOutputModule'] = om
                                 #print 't_second',pprint.pformat(t_second)
                                 if t_second['TaskName'].startswith('HARVEST'):
                                     chainDict.update(copy.deepcopy(self.defaultHarvest))
+                                    if "_RD" in t_second['TaskName']:
+                                        chainDict['DQMHarvestUnit'] = "multiRun"
                                     chainDict['DQMConfigCacheID']=t_second['ConfigCacheID']
                                     ## the info are not in the task specific dict but in the general dict
                                     #t_input.update(copy.deepcopy(self.defaultHarvest))
@@ -449,7 +540,7 @@ class MatrixInjector(object):
             itask=0
             if self.keep:
                 for i in self.keep:
-                    if type(i)==int and i < len(chainDict['nowmTasklist']):
+                    if isinstance(i, int) and i < len(chainDict['nowmTasklist']):
                         chainDict['nowmTasklist'][i]['KeepOutput']=True
             for (i,t) in enumerate(chainDict['nowmTasklist']):
                 if t['TaskName'].startswith('HARVEST'):
@@ -458,6 +549,8 @@ class MatrixInjector(object):
                     t['KeepOutput']=True
                 elif t['TaskName'] in self.keep:
                     t['KeepOutput']=True
+                if t['TaskName'].startswith('HYBRIDRepackHI2015VR'):
+                    t['KeepOutput']=False
                 t.pop('nowmIO')
                 itask+=1
                 chainDict['Task%d'%(itask)]=t
@@ -480,21 +573,21 @@ class MatrixInjector(object):
         cacheName=filePath.split('/')[-1]
         if self.testMode:
             self.count+=1
-            print '\tFake upload of',filePath,'to couch with label',labelInCouch
+            print('\tFake upload of',filePath,'to couch with label',labelInCouch)
             return self.count
         else:
             try:
                 from modules.wma import upload_to_couch,DATABASE_NAME
             except:
-                print '\n\tUnable to find wmcontrol modules. Please include it in your python path\n'
-                print '\n\t QUIT\n'
+                print('\n\tUnable to find wmcontrol modules. Please include it in your python path\n')
+                print('\n\t QUIT\n')
                 sys.exit(-16)
 
             if cacheName in self.couchCache:
-                print "Not re-uploading",filePath,"to",where,"for",label
+                print("Not re-uploading",filePath,"to",where,"for",label)
                 cacheId=self.couchCache[cacheName]
             else:
-                print "Loading",filePath,"to",where,"for",label
+                print("Loading",filePath,"to",where,"for",label)
                 ## totally fork the upload to couch to prevent cross loading of process configurations
                 pool = multiprocessing.Pool(1)
                 cacheIds = pool.map( upload_to_couch_oneArg, [(filePath,labelInCouch,self.user,self.group,where)] )
@@ -511,14 +604,14 @@ class MatrixInjector(object):
                                             str(n)+d[it]['TaskName'],
                                             d['ConfigCacheUrl']
                                             )
-                    print d[it]['ConfigCacheID']," uploaded to couchDB for",str(n),"with ID",couchID
+                    print(d[it]['ConfigCacheID']," uploaded to couchDB for",str(n),"with ID",couchID)
                     d[it]['ConfigCacheID']=couchID
                 if it =='DQMConfigCacheID':
                     couchID=self.uploadConf(d['DQMConfigCacheID'],
                                             str(n)+'harvesting',
                                             d['ConfigCacheUrl']
                                             )
-                    print d['DQMConfigCacheID'],"uploaded to couchDB for",str(n),"with ID",couchID
+                    print(d['DQMConfigCacheID'],"uploaded to couchDB for",str(n),"with ID",couchID)
                     d['DQMConfigCacheID']=couchID
                         
             
@@ -526,26 +619,26 @@ class MatrixInjector(object):
         try:
             from modules.wma import makeRequest,approveRequest
             from wmcontrol import random_sleep
-            print '\n\tFound wmcontrol\n'
+            print('\n\tFound wmcontrol\n')
         except:
-            print '\n\tUnable to find wmcontrol modules. Please include it in your python path\n'
+            print('\n\tUnable to find wmcontrol modules. Please include it in your python path\n')
             if not self.testMode:
-                print '\n\t QUIT\n'
+                print('\n\t QUIT\n')
                 sys.exit(-17)
 
         import pprint
         for (n,d) in self.chainDicts.items():
             if self.testMode:
-                print "Only viewing request",n
-                print pprint.pprint(d)
+                print("Only viewing request",n)
+                print(pprint.pprint(d))
             else:
                 #submit to wmagent each dict
-                print "For eyes before submitting",n
-                print pprint.pprint(d)
-                print "Submitting",n,"..........."
+                print("For eyes before submitting",n)
+                print(pprint.pprint(d))
+                print("Submitting",n,"...........")
                 workFlow=makeRequest(self.wmagent,d,encodeDict=True)
-                print "...........",n,"submitted"
+                print("...........",n,"submitted")
                 random_sleep()
-            
-
-        
+        if self.testMode and len(self.longWFName)>0:
+            print("\n*** WARNING: "+str(len(self.longWFName))+" workflows have too long names for submission (>"+str(MAXWORKFLOWLENGTH)+ "characters) ***")
+            print('\n'.join(self.longWFName))

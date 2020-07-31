@@ -1,7 +1,6 @@
-#include "FTFPCMS_BERT_ATL_EMM.hh"
+#include "FTFPCMS_BERT_ATL_EMM.h"
 #include "SimG4Core/PhysicsLists/interface/CMSEmStandardPhysicsLPM.h"
 #include "SimG4Core/PhysicsLists/interface/CMSHadronPhysicsFTFP_BERT_ATL.h"
-#include "SimG4Core/PhysicsLists/interface/CMSMonopolePhysics.h"
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 
 #include "G4DecayPhysics.hh"
@@ -12,31 +11,20 @@
 #include "G4NeutronTrackingCut.hh"
 #include "G4HadronicProcessStore.hh"
 
-#include "G4DataQuestionaire.hh"
-
-FTFPCMS_BERT_ATL_EMM::FTFPCMS_BERT_ATL_EMM(
-                      G4LogicalVolumeToDDLogicalPartMap& map, 
-                      const HepPDT::ParticleDataTable * table_,
-                      sim::ChordFinderSetter *chordFinderSetter_, 
-                      const edm::ParameterSet & p) 
-  : PhysicsList(map, table_, chordFinderSetter_, p) {
-
-  G4DataQuestionaire it(photon);
-  
-  int  ver     = p.getUntrackedParameter<int>("Verbosity",0);
-  bool emPhys  = p.getUntrackedParameter<bool>("EMPhysics",true);
-  bool hadPhys = p.getUntrackedParameter<bool>("HadPhysics",true);
-  bool tracking= p.getParameter<bool>("TrackingCut");
-  double timeLimit = p.getParameter<double>("MaxTrackTime")*ns;
-  edm::LogInfo("PhysicsList") << "You are using the simulation engine: "
-			      << "FTFP_BERT_ATL_EMM \n Flags for EM Physics "
-			      << emPhys << ", for Hadronic Physics "
-			      << hadPhys << " and tracking cut " << tracking
-			      << "   t(ns)= " << timeLimit/ns;
+FTFPCMS_BERT_ATL_EMM::FTFPCMS_BERT_ATL_EMM(const edm::ParameterSet& p) : PhysicsList(p) {
+  int ver = p.getUntrackedParameter<int>("Verbosity", 0);
+  bool emPhys = p.getUntrackedParameter<bool>("EMPhysics", true);
+  bool hadPhys = p.getUntrackedParameter<bool>("HadPhysics", true);
+  bool tracking = p.getParameter<bool>("TrackingCut");
+  double timeLimit = p.getParameter<double>("MaxTrackTime") * CLHEP::ns;
+  edm::LogVerbatim("PhysicsList") << "You are using the simulation engine: "
+                                  << "FTFP_BERT_ATL_EMM \n Flags for EM Physics " << emPhys << ", for Hadronic Physics "
+                                  << hadPhys << " and tracking cut " << tracking
+                                  << "   t(ns)= " << timeLimit / CLHEP::ns;
 
   if (emPhys) {
     // EM Physics
-    RegisterPhysics( new CMSEmStandardPhysicsLPM(ver));
+    RegisterPhysics(new CMSEmStandardPhysicsLPM(ver));
 
     // Synchroton Radiation & GN Physics
     G4EmExtraPhysics* gn = new G4EmExtraPhysics(ver);
@@ -44,32 +32,28 @@ FTFPCMS_BERT_ATL_EMM::FTFPCMS_BERT_ATL_EMM(
   }
 
   // Decays
-  this->RegisterPhysics( new G4DecayPhysics(ver) );
+  this->RegisterPhysics(new G4DecayPhysics(ver));
 
   if (hadPhys) {
     G4HadronicProcessStore::Instance()->SetVerbose(ver);
 
     // Hadron Elastic scattering
-    RegisterPhysics( new G4HadronElasticPhysics(ver));
+    RegisterPhysics(new G4HadronElasticPhysics(ver));
 
     // Hadron Physics
-    RegisterPhysics(  new CMSHadronPhysicsFTFP_BERT_ATL(ver));
+    RegisterPhysics(new CMSHadronPhysicsFTFP_BERT_ATL(ver));
 
     // Stopping Physics
-    RegisterPhysics( new G4StoppingPhysics(ver));
+    RegisterPhysics(new G4StoppingPhysics(ver));
 
     // Ion Physics
-    RegisterPhysics( new G4IonPhysics(ver));
+    RegisterPhysics(new G4IonPhysics(ver));
 
     // Neutron tracking cut
     if (tracking) {
-      G4NeutronTrackingCut* ncut= new G4NeutronTrackingCut(ver);
+      G4NeutronTrackingCut* ncut = new G4NeutronTrackingCut(ver);
       ncut->SetTimeLimit(timeLimit);
       RegisterPhysics(ncut);
     }
   }
-
-  // Monopoles
-  RegisterPhysics( new CMSMonopolePhysics(table_,chordFinderSetter_,p));
 }
-

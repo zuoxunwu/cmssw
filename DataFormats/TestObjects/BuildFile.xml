@@ -1,5 +1,5 @@
-<use   name="DataFormats/Common"/>
-<flags GENREFLEX_FAILES_ON_WARNS="0"/>
+<use name="DataFormats/Common"/>
+<use name="DataFormats/Provenance"/>
 <export>
-  <lib   name="1"/>
+  <lib name="1"/>
 </export>

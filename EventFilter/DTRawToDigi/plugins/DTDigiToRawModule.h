@@ -4,7 +4,9 @@
 #include "FWCore/Framework/interface/stream/EDProducer.h"
 #include "FWCore/Utilities/interface/InputTag.h"
 #include "DataFormats/DTDigi/interface/DTDigiCollection.h"
-
+#include "FWCore/Utilities/interface/ESGetToken.h"
+#include "CondFormats/DTObjects/interface/DTReadOutMapping.h"
+#include "CondFormats/DataRecord/interface/DTReadOutMappingRcd.h"
 
 class DTDigiToRaw;
 
@@ -14,22 +16,21 @@ public:
   DTDigiToRawModule(const edm::ParameterSet& pset);
 
   /// Destructor
-  virtual ~DTDigiToRawModule();
+  ~DTDigiToRawModule() override;
 
   // Operations
-  virtual void produce( edm::Event&, const edm::EventSetup& ) override;
+  void produce(edm::Event&, const edm::EventSetup&) override;
 
 private:
-  DTDigiToRaw * packer;
-  
+  DTDigiToRaw* packer;
+
   int dduID;
   bool debug;
   edm::EDGetTokenT<DTDigiCollection> digicoll;
-  
+  edm::ESGetToken<DTReadOutMapping, DTReadOutMappingRcd> mapToken_;
+
   bool useStandardFEDid_;
   int minFEDid_;
   int maxFEDid_;
-
 };
 #endif
-

@@ -4,7 +4,7 @@
 //
 // Package:         RecoTracker/FinalTrackSelectors
 // Class:           ConversionTrackProducer
-// 
+//
 // Description:     Hit Dumper
 //
 // Original Author: Steve Wagner, stevew@pizero.colorado.edu
@@ -14,7 +14,6 @@
 
 #include "FWCore/Framework/interface/stream/EDProducer.h"
 #include "FWCore/Framework/interface/Event.h"
-#include "DataFormats/Common/interface/Handle.h"
 #include "FWCore/Framework/interface/EventSetup.h"
 
 #include "DataFormats/EgammaTrackReco/interface/ConversionTrack.h"
@@ -25,6 +24,9 @@
 #include "DataFormats/TrackingRecHit/interface/TrackingRecHit.h"
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
+
+#include "MagneticField/Engine/interface/MagneticField.h"
+#include "MagneticField/Records/interface/IdealMagneticFieldRecord.h"
 
 #include "TrackingTools/PatternTools/interface/TrajTrackAssociation.h"
 #include "TrackingTools/GsfTracking/interface/TrajGsfTrackAssociation.h"
@@ -40,46 +42,37 @@ namespace reco {
 #include "RecoTracker/ConversionSeedGenerators/interface/IdealHelixParameters.h"
 //--------------------------------------------------
 
-  class ConversionTrackProducer : public edm::stream::EDProducer<>
-  {
-
-    typedef edm::AssociationMap<edm::OneToOne<std::vector<Trajectory>,
-      reco::GsfTrackCollection,unsigned short> > 
+class ConversionTrackProducer : public edm::stream::EDProducer<> {
+  typedef edm::AssociationMap<edm::OneToOne<std::vector<Trajectory>, reco::GsfTrackCollection, unsigned short> >
       TrajGsfTrackAssociationCollection;
 
-  public:
+public:
+  explicit ConversionTrackProducer(const edm::ParameterSet& conf);
 
-    explicit ConversionTrackProducer(const edm::ParameterSet& conf);
+  ~ConversionTrackProducer() override;
 
-    virtual ~ConversionTrackProducer();
+  void produce(edm::Event& e, const edm::EventSetup& c) override;
 
-    virtual void produce(edm::Event& e, const edm::EventSetup& c);
+private:
+  edm::EDGetTokenT<edm::View<reco::Track> > genericTracks;
+  edm::EDGetTokenT<TrajTrackAssociationCollection> kfTrajectories;
+  edm::EDGetTokenT<TrajGsfTrackAssociationCollection> gsfTrajectories;
+  bool useTrajectory;
+  bool setTrackerOnly;
+  bool setIsGsfTrackOpen;
+  bool setArbitratedEcalSeeded;
+  bool setArbitratedMerged;
+  bool setArbitratedMergedEcalGeneral;
 
-  private:
+  //--------------------------------------------------
+  //Added by D. Giordano
+  // 2011/08/05
+  // Reduction of the track sample based on geometric hypothesis for conversion tracks
 
-    edm::ParameterSet conf_;
-
-    std::string trackProducer;
-    edm::EDGetTokenT<edm::View<reco::Track> > genericTracks ;
-    edm::EDGetTokenT<TrajTrackAssociationCollection> kfTrajectories; 
-    edm::EDGetTokenT<TrajGsfTrackAssociationCollection> gsfTrajectories;
-    bool useTrajectory;
-    bool setTrackerOnly;
-    bool setArbitratedEcalSeeded;
-    bool setArbitratedMerged;
-    bool setArbitratedMergedEcalGeneral;
-
-    //--------------------------------------------------
-    //Added by D. Giordano
-    // 2011/08/05
-    // Reduction of the track sample based on geometric hypothesis for conversion tracks
-
-    edm::EDGetTokenT<reco::BeamSpot> beamSpotInputTag;
-    bool filterOnConvTrackHyp;
-    double minConvRadius;
-    IdealHelixParameters ConvTrackPreSelector;
-    //--------------------------------------------------
-
-    std::unique_ptr<reco::ConversionTrackCollection> outputTrks;
-  };
+  edm::EDGetTokenT<reco::BeamSpot> beamSpotInputTag;
+  edm::ESGetToken<MagneticField, IdealMagneticFieldRecord> magFieldToken;
+  bool filterOnConvTrackHyp;
+  double minConvRadius;
+  IdealHelixParameters ConvTrackPreSelector;
+};
 #endif

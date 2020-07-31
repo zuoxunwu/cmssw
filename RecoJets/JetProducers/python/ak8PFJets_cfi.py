@@ -16,12 +16,17 @@ ak8PFJets = ak4PFJets.clone(
 # AK8 jets with various pileup subtraction schemes
 ##############################################################################
 ak8PFJetsPuppi = ak8PFJets.clone(
-    src = cms.InputTag("puppi")
+    src = cms.InputTag("particleFlow"),
+    applyWeight = True,
+    srcWeights = cms.InputTag("puppi")
     )
 
 ak8PFJetsCHS = ak8PFJets.clone(
     src = cms.InputTag("pfNoPileUpJME")
     )
+
+from Configuration.Eras.Modifier_pp_on_AA_2018_cff import pp_on_AA_2018
+pp_on_AA_2018.toModify(ak8PFJetsCHS,src = "pfNoPileUpJMEHI", inputEtMin = 9999)
 
 ak8PFJetsCS = ak8PFJets.clone(
     useConstituentSubtraction = cms.bool(True),    
@@ -79,7 +84,7 @@ ak8PFJetsCHSMassDropFiltered = ak8PFJets.clone(
 
 ak8PFJetsCHSPruned = ak8PFJets.clone(
     SubJetParameters,
-    src = cms.InputTag("pfNoPileUpJME"),
+    src = cms.InputTag("ak8PFJetsCHSConstituents", "constituents"),
     usePruning = cms.bool(True),
     useExplicitGhosts = cms.bool(True),
     writeCompound = cms.bool(True),
@@ -90,7 +95,7 @@ ak8PFJetsCHSPruned = ak8PFJets.clone(
 
 ak8PFJetsCHSSoftDrop = ak8PFJets.clone(
     useSoftDrop = cms.bool(True),
-    src = cms.InputTag("pfNoPileUpJME"),
+    src = cms.InputTag("ak8PFJetsCHSConstituents", "constituents"),
     zcut = cms.double(0.1),
     beta = cms.double(0.0),
     R0   = cms.double(0.8),
@@ -103,7 +108,7 @@ ak8PFJetsCHSSoftDrop = ak8PFJets.clone(
 
 ak8PFJetsCHSTrimmed = ak8PFJets.clone(
     useTrimming = cms.bool(True),
-    src = cms.InputTag("pfNoPileUpJME"),
+    src = cms.InputTag("ak8PFJetsCHSConstituents", "constituents"),
     rFilt = cms.double(0.2),
     trimPtFracMin = cms.double(0.03),
     useExplicitGhosts = cms.bool(True),
@@ -111,5 +116,7 @@ ak8PFJetsCHSTrimmed = ak8PFJets.clone(
     )
 
 ak8PFJetsPuppiSoftDrop = ak8PFJetsCHSSoftDrop.clone(
-    src = cms.InputTag("puppi")
+    src = cms.InputTag("ak8PFJetsPuppiConstituents", "constituents"),
+    applyWeight = True,
+    srcWeights = cms.InputTag("puppi")
     )

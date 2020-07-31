@@ -17,17 +17,16 @@
 #include "DataFormats/HLTReco/interface/TriggerObject.h"
 #include "DataFormats/HLTReco/interface/TriggerEvent.h"
 
-class PFJetsTauOverlapRemoval: public edm::global::EDProducer<> {
-
- private:
+class PFJetsTauOverlapRemoval : public edm::global::EDProducer<> {
+private:
   const edm::EDGetTokenT<trigger::TriggerFilterObjectWithRefs> tauSrc_;
   const edm::EDGetTokenT<reco::PFJetCollection> pfJetSrc_;
   const double matchingR2_;
 
- public:
+public:
   explicit PFJetsTauOverlapRemoval(const edm::ParameterSet&);
-  ~PFJetsTauOverlapRemoval();
-  virtual void produce(edm::StreamID, edm::Event&, const edm::EventSetup&) const override;
+  ~PFJetsTauOverlapRemoval() override;
+  void produce(edm::StreamID, edm::Event&, const edm::EventSetup&) const override;
   static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 };
 #endif

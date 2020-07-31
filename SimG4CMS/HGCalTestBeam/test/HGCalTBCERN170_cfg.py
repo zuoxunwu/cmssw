@@ -11,6 +11,7 @@ process.load('SimGeneral.MixingModule.mixNoPU_cfi')
 process.load('SimG4CMS.HGCalTestBeam.HGCalTB170JulyXML_cfi')
 process.load('Geometry.HGCalCommonData.hgcalNumberingInitialization_cfi')
 process.load('Geometry.HGCalCommonData.hgcalParametersInitialization_cfi')
+process.load('Geometry.HcalTestBeamData.hcalTB06Parameters_cff')
 process.load('Configuration.StandardSequences.MagneticField_0T_cff')
 process.load('Configuration.StandardSequences.Generator_cff')
 process.load('IOMC.EventVertexGenerators.VtxSmearedFlat_cfi')
@@ -28,6 +29,8 @@ process.maxEvents = cms.untracked.PSet(
 if 'MessageLogger' in process.__dict__:
     process.MessageLogger.categories.append('HGCSim')
     process.MessageLogger.categories.append('HcalSim')
+    process.MessageLogger.categories.append('HcalTB06BeamSD')
+    process.MessageLogger.categories.append('ValidHGCal')
 
 # Input source
 process.source = cms.Source("EmptySource")
@@ -93,20 +96,20 @@ process.g4SimHits.HGCSD.RejectMouseBite = True
 process.g4SimHits.HGCSD.RotatedWafer    = True
 process.g4SimHits.Watchers = cms.VPSet(cms.PSet(
 		HGCPassive = cms.PSet(
-			LVNames = cms.vstring('HGCalEE','HGCalHE','HGCalAH', 'CMSE'),
-			MotherName = cms.string('CMSE'),
+			LVNames = cms.vstring('HGCalEE','HGCalHE','HGCalAH', 'HGCalBeam', 'CMSE'),
+			MotherName = cms.string('OCMS'),
 			),
 		type = cms.string('HGCPassive'),
 		)
 				       )
-process.HGCalTBAnalyzer.DoDigis     = False
-process.HGCalTBAnalyzer.DoRecHits   = False
-process.HGCalTBAnalyzer.UseFH       = True
-process.HGCalTBAnalyzer.UseBH       = True
-process.HGCalTBAnalyzer.UseBeam     = True
-process.HGCalTBAnalyzer.ZFrontEE    = 1110.0
-process.HGCalTBAnalyzer.ZFrontFH    = 1172.3
-process.HGCalTBAnalyzer.DoPassive   = True
+process.HGCalTBAnalyzer.doDigis     = False
+process.HGCalTBAnalyzer.doRecHits   = False
+process.HGCalTBAnalyzer.useFH       = True
+process.HGCalTBAnalyzer.useBH       = True
+process.HGCalTBAnalyzer.useBeam     = True
+process.HGCalTBAnalyzer.zFrontEE    = 1110.0
+process.HGCalTBAnalyzer.zFrontFH    = 1172.3
+process.HGCalTBAnalyzer.doPassive   = True
 
 # Path and EndPath definitions
 process.generation_step = cms.Path(process.pgen)

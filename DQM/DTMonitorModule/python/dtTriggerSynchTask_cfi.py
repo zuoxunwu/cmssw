@@ -1,10 +1,10 @@
 import FWCore.ParameterSet.Config as cms
 
-dtTriggerSynchMonitor = cms.EDAnalyzer("DTLocalTriggerSynchTask",
+from DQMServices.Core.DQMEDAnalyzer import DQMEDAnalyzer
+dtTriggerSynchMonitor = DQMEDAnalyzer('DTLocalTriggerSynchTask',
     staticBooking = cms.untracked.bool(True),
-    # labels of DDU/TM data and 4D segments
+    # labels of TM data and 4D segments
     TMInputTag    = cms.InputTag('dttfDigis'),
-    DDUInputTag    = cms.InputTag('muonDTDigis'),
     SEGInputTag    = cms.InputTag('dt4DSegments'),
     bxTimeInterval = cms.double(25),
     rangeWithinBX  = cms.bool(True),

@@ -4,11 +4,11 @@ from Validation.RecoTrack.HLTmultiTrackValidator_cfi import *
 hltGsfTrackValidator = hltMultiTrackValidator.clone(
     label = [
         "hltEgammaGsfTracks",
-        "hltEgammaGsfTracksUnseeded",
+#        "hltEgammaGsfTracksUnseeded",
     ],
     label_tp_effic           = "trackingParticlesElectron",
     label_tp_effic_refvector = cms.bool(True), 
-    dirName                  = cms.string('HLT/EG/Tracking/ValidationWRTtp/'),
+    dirName                  = cms.string('HLT/EGM/Tracking/ValidationWRTtp/'),
     ## eta range driven by ECAL acceptance
     histoProducerAlgoBlock = dict(
         TpSelectorForEfficiencyVsEta  = dict(minRapidity=-3, maxRapidity=3),
@@ -23,9 +23,12 @@ hltGsfTrackValidator = hltMultiTrackValidator.clone(
 )
 
 from Validation.RecoTrack.TrackValidation_cff import trackingParticlesElectron
+hltMultiTrackValidationGsfTracksTask = cms.Task(
+   hltTPClusterProducer
+   , hltTrackAssociatorByHits
+   , trackingParticlesElectron
+ )
 hltMultiTrackValidationGsfTracks = cms.Sequence(
-    hltTPClusterProducer
-    + hltTrackAssociatorByHits
-    + cms.ignore(trackingParticlesElectron)    
-    + hltGsfTrackValidator
+    hltGsfTrackValidator,
+    hltMultiTrackValidationGsfTracksTask
 )    

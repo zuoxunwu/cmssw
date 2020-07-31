@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from RecoTracker.IterativeTracking.DetachedQuadStep_cff import *
-from HIPixelTripletSeeds_cff import *
-from HIPixel3PrimTracks_cfi import *
+from .HIPixelTripletSeeds_cff import *
+from .HIPixel3PrimTracks_cfi import *
 
 hiDetachedQuadStepClusters = cms.EDProducer("HITrackClusterRemover",
      clusterLessSolution = cms.bool(True),
@@ -30,7 +31,6 @@ hiDetachedQuadStepSeedLayers.FPix.skipClusters = cms.InputTag('hiDetachedQuadSte
 from RecoTracker.TkTrackingRegions.globalTrackingRegionWithVertices_cfi import globalTrackingRegionWithVertices as _globalTrackingRegionWithVertices
 from RecoTracker.TkHitPairs.hitPairEDProducer_cfi import hitPairEDProducer as _hitPairEDProducer
 from RecoPixelVertexing.PixelTriplets.pixelTripletHLTEDProducer_cfi import pixelTripletHLTEDProducer as _pixelTripletHLTEDProducer
-from RecoPixelVertexing.PixelTriplets.pixelQuadrupletEDProducer_cfi import pixelQuadrupletEDProducer as _pixelQuadrupletEDProducer
 from RecoPixelVertexing.PixelLowPtUtilities.ClusterShapeHitFilterESProducer_cfi import *
 from RecoPixelVertexing.PixelLowPtUtilities.trackCleaner_cfi import *
 from RecoPixelVertexing.PixelTrackFitting.pixelFitterByHelixProjections_cfi import *
@@ -57,7 +57,7 @@ hiDetachedQuadStepTracksHitDoubletsCA = _hitPairEDProducer.clone(
     clusterCheck = "",
     seedingLayers = "hiDetachedQuadStepSeedLayers",
     trackingRegions = "hiDetachedQuadStepTrackingRegions",
-    maxElement = 0,
+    maxElement = 50000000,
     produceIntermediateHitDoublets = True,
     layerPairs = [0,1,2]
 )
@@ -227,18 +227,18 @@ hiDetachedQuadStepQual = RecoTracker.FinalTrackSelectors.trackListMerger_cfi.tra
     )
 
 
-hiDetachedQuadStep = cms.Sequence(hiDetachedQuadStepClusters*
-                                     hiDetachedQuadStepSeedLayers*
-                                     hiDetachedQuadStepTrackingRegions*
-                                     hiDetachedQuadStepTracksHitDoubletsCA* 
-                                     hiDetachedQuadStepTracksHitQuadrupletsCA* 
-				     pixelFitterByHelixProjections*
-                                     hiDetachedQuadStepPixelTracksFilter*
-                                     hiDetachedQuadStepPixelTracks*
-                                     hiDetachedQuadStepSeeds*
-                                     hiDetachedQuadStepTrackCandidates*
-                                     hiDetachedQuadStepTracks*
-                                     hiDetachedQuadStepSelector*
+hiDetachedQuadStepTask = cms.Task(hiDetachedQuadStepClusters,
+                                     hiDetachedQuadStepSeedLayers,
+                                     hiDetachedQuadStepTrackingRegions,
+                                     hiDetachedQuadStepTracksHitDoubletsCA, 
+                                     hiDetachedQuadStepTracksHitQuadrupletsCA, 
+				     pixelFitterByHelixProjections,
+                                     hiDetachedQuadStepPixelTracksFilter,
+                                     hiDetachedQuadStepPixelTracks,
+                                     hiDetachedQuadStepSeeds,
+                                     hiDetachedQuadStepTrackCandidates,
+                                     hiDetachedQuadStepTracks,
+                                     hiDetachedQuadStepSelector,
                                      hiDetachedQuadStepQual)
-
+hiDetachedQuadStep = cms.Sequence(hiDetachedQuadStepTask)
 

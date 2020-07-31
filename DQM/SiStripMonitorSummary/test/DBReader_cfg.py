@@ -2,10 +2,7 @@ import FWCore.ParameterSet.Config as cms
 
 process = cms.Process("Reader")
 
-process.load("DQM.SiStripCommon.TkHistoMap_cfi")
-
-process.TkDetMap = cms.Service("TkDetMap")
-process.SiStripDetInfoFileReader = cms.Service("SiStripDetInfoFileReader")
+process.load("DQM.SiStripCommon.TkHistoMap_cff")
 
 process.MessageLogger = cms.Service("MessageLogger",
     debugModules = cms.untracked.vstring(''),
@@ -108,7 +105,6 @@ siStripQualityESProducer = cms.ESProducer("SiStripQualityESProducer",
 
 
 process.DQMStore = cms.Service("DQMStore",
-    referenceFileName = cms.untracked.string(''),
     verbose = cms.untracked.int32(1)
 )
 

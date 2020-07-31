@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 from RecoTracker.IterativeTracking.LowPtQuadStep_cff import *
-from HIPixelTripletSeeds_cff import *
-from HIPixel3PrimTracks_cfi import *
+from .HIPixelTripletSeeds_cff import *
+from .HIPixel3PrimTracks_cfi import *
 
 hiLowPtQuadStepClusters = cms.EDProducer("HITrackClusterRemover",
      clusterLessSolution = cms.bool(True),
@@ -30,7 +31,6 @@ hiLowPtQuadStepSeedLayers.FPix.skipClusters = cms.InputTag('hiLowPtQuadStepClust
 from RecoTracker.TkTrackingRegions.globalTrackingRegionWithVertices_cfi import globalTrackingRegionWithVertices as _globalTrackingRegionWithVertices
 from RecoTracker.TkHitPairs.hitPairEDProducer_cfi import hitPairEDProducer as _hitPairEDProducer
 from RecoPixelVertexing.PixelTriplets.pixelTripletHLTEDProducer_cfi import pixelTripletHLTEDProducer as _pixelTripletHLTEDProducer
-from RecoPixelVertexing.PixelTriplets.pixelQuadrupletEDProducer_cfi import pixelQuadrupletEDProducer as _pixelQuadrupletEDProducer
 from RecoPixelVertexing.PixelLowPtUtilities.ClusterShapeHitFilterESProducer_cfi import *
 from RecoPixelVertexing.PixelLowPtUtilities.trackCleaner_cfi import *
 from RecoPixelVertexing.PixelTrackFitting.pixelFitterByHelixProjections_cfi import *
@@ -55,7 +55,7 @@ hiLowPtQuadStepTracksHitDoubletsCA = _hitPairEDProducer.clone(
     clusterCheck = "",
     seedingLayers = "hiLowPtQuadStepSeedLayers",
     trackingRegions = "hiLowPtQuadStepTrackingRegions",
-    maxElement = 0,
+    maxElement = 50000000,
     produceIntermediateHitDoublets = True,
     layerPairs = [0,1,2]
 )
@@ -228,18 +228,18 @@ hiLowPtQuadStepQual = RecoTracker.FinalTrackSelectors.trackListMerger_cfi.trackL
     )
 
 
-hiLowPtQuadStep = cms.Sequence(hiLowPtQuadStepClusters*
-                                     hiLowPtQuadStepSeedLayers*
-                                     hiLowPtQuadStepTrackingRegions*
-                                     hiLowPtQuadStepTracksHitDoubletsCA* 
-                                     hiLowPtQuadStepTracksHitQuadrupletsCA* 
-				     pixelFitterByHelixProjections*
-                                     hiLowPtQuadStepPixelTracksFilter*
-                                     hiLowPtQuadStepPixelTracks*
-                                     hiLowPtQuadStepSeeds*
-                                     hiLowPtQuadStepTrackCandidates*
-                                     hiLowPtQuadStepTracks*
-                                     hiLowPtQuadStepSelector*
+hiLowPtQuadStepTask = cms.Task(hiLowPtQuadStepClusters,
+                                     hiLowPtQuadStepSeedLayers,
+                                     hiLowPtQuadStepTrackingRegions,
+                                     hiLowPtQuadStepTracksHitDoubletsCA, 
+                                     hiLowPtQuadStepTracksHitQuadrupletsCA, 
+				     pixelFitterByHelixProjections,
+                                     hiLowPtQuadStepPixelTracksFilter,
+                                     hiLowPtQuadStepPixelTracks,
+                                     hiLowPtQuadStepSeeds,
+                                     hiLowPtQuadStepTrackCandidates,
+                                     hiLowPtQuadStepTracks,
+                                     hiLowPtQuadStepSelector,
                                      hiLowPtQuadStepQual)
-
+hiLowPtQuadStep = cms.Sequence(hiLowPtQuadStepTask)
 

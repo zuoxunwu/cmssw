@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys, os
 
 from Configuration.PyReleaseValidation.WorkFlow import WorkFlow
@@ -48,10 +49,9 @@ class MatrixReader(object):
                              'relval_ged': 'ged-',
                              'relval_upgrade':'upg-',
                              'relval_2017':'2017-',
-                             'relval_2023':'2023-',
+                             'relval_2026':'2026-',
                              'relval_identity':'id-',
                              'relval_machine': 'mach-',
-                             'relval_unsch': 'unsch-',
                              'relval_premix': 'premix-'
                              }
 
@@ -64,10 +64,9 @@ class MatrixReader(object):
                       'relval_ged',
                       'relval_upgrade',
                       'relval_2017',
-                      'relval_2023',
+                      'relval_2026',
                       'relval_identity',
                       'relval_machine',
-                      'relval_unsch',
                       'relval_premix'
                       ]
         self.filesDefault = {'relval_standard':True ,
@@ -79,10 +78,9 @@ class MatrixReader(object):
                              'relval_ged':True,
                              'relval_upgrade':False,
                              'relval_2017':True,
-                             'relval_2023':True,
+                             'relval_2026':True,
                              'relval_identity':False,
                              'relval_machine':True,
-                             'relval_unsch':True,
                              'relval_premix':True
                              }
 
@@ -112,7 +110,7 @@ class MatrixReader(object):
     
     def makeStep(self,step,overrides):
         from Configuration.PyReleaseValidation.relval_steps import merge
-        if len(overrides.keys()) > 0:
+        if len(overrides) > 0:
             copyStep=merge([overrides]+[step])
             return copyStep
         else:    
@@ -122,17 +120,17 @@ class MatrixReader(object):
         
         prefix = self.filesPrefMap[fileNameIn]
         
-        print "processing", fileNameIn
+        print("processing", fileNameIn)
         
         try:
             _tmpMod = __import__( 'Configuration.PyReleaseValidation.'+fileNameIn )
             self.relvalModule = sys.modules['Configuration.PyReleaseValidation.'+fileNameIn]
         except Exception as e:
-            print "ERROR importing file ", fileNameIn, str(e)
+            print("ERROR importing file ", fileNameIn, str(e))
             return
 
         if useInput is not None:
-            print "request for INPUT for ", useInput
+            print("request for INPUT for ", useInput)
 
         
         fromInput={}
@@ -192,7 +190,7 @@ class MatrixReader(object):
             addCom=None
             if len(wfInfo)>=3:
                 addCom=wfInfo[2]
-                if not type(addCom)==list:   addCom=[addCom]
+                if not isinstance(addCom, list):   addCom=[addCom]
                 #print 'added dict',addCom
                 if len(wfInfo)>=4:
                     addTo=wfInfo[3]
@@ -233,12 +231,11 @@ class MatrixReader(object):
                                                     
             for (stepI,step) in enumerate(stepList):
                 stepName=step
+                if self.relvalModule.steps[stepName] is None:
+                    continue
                 if self.wm:
                     #cannot put a certain number of things in wm
-                    if stepName in [
-                        #'HARVEST','HARVESTD','HARVESTDreHLT',
-                        'RECODFROMRAWRECO','SKIMD','SKIMCOSD','SKIMDreHLT'
-                        ]:
+                    if stepName in ['SKIMD','SKIMCOSD','SKIMDreHLT']:
                         continue
                     
                 #replace stepName is needed
@@ -303,17 +300,17 @@ class MatrixReader(object):
             self.reset(what)
 
             if self.what != 'all' and self.what not in matrixFile:
-                print "ignoring non-requested file",matrixFile
+                print("ignoring non-requested file",matrixFile)
                 continue
 
             if self.what == 'all' and not self.filesDefault[matrixFile]:
-                print "ignoring file not used by default (enable with -w)",matrixFile
+                print("ignoring file not used by default (enable with -w)",matrixFile)
                 continue
 
             try:
                 self.readMatrix(matrixFile, useInput, refRel, fromScratch)
             except Exception as e:
-                print "ERROR reading file:", matrixFile, str(e)
+                print("ERROR reading file:", matrixFile, str(e))
                 raise
 
             if not self.workFlowSteps: continue
@@ -321,9 +318,8 @@ class MatrixReader(object):
             dataFileName = matrixFile.replace('relval_', 'cmsDriver_')+'_hlt.txt'
             outFile = open(dataFileName,'w')
 
-            print "found ", len(self.workFlowSteps.keys()), ' workflows for ', dataFileName
-            ids = self.workFlowSteps.keys()
-            ids.sort()
+            print("found ", len(self.workFlowSteps), ' workflows for ', dataFileName)
+            ids = sorted(self.workFlowSteps.keys())
             indexAndSteps=[]
 
             writtenWF=0
@@ -336,7 +332,6 @@ class MatrixReader(object):
                 
                 wfName,stepNames= name.split('+',1)
                 
-                stepNames=stepNames.replace('+RECODFROMRAWRECO','')
                 stepNames=stepNames.replace('+SKIMCOSD','')
                 stepNames=stepNames.replace('+SKIMD','')
                 if 'HARVEST' in stepNames:
@@ -395,7 +390,7 @@ class MatrixReader(object):
                     outFile.write(line+'\n')
                 outFile.write('\n'+'\n')
             outFile.close()
-            print "wrote ",writtenWF, ' workflow'+('s' if (writtenWF!=1) else ''),' to ', outFile.name
+            print("wrote ",writtenWF, ' workflow'+('s' if (writtenWF!=1) else ''),' to ', outFile.name)
         return 
 
     def workFlowsByLocation(self, cafVeto=True):
@@ -414,14 +409,14 @@ class MatrixReader(object):
         return workflows
 
     def showWorkFlows(self, selected=None, extended=True, cafVeto=True):
-        if selected: selected = map(float,selected)
+        if selected: selected = list(map(float,selected))
         wfs = self.workFlowsByLocation(cafVeto)
         maxLen = 100 # for summary, limit width of output
         fmt1   = "%-6s %-35s [1]: %s ..."
         fmt2   = "       %35s [%d]: %s ..."
-        print "\nfound a total of ", len(wfs), ' workflows:'
+        print("\nfound a total of ", len(wfs), ' workflows:')
         if selected:
-            print "      of which the following", len(selected), 'were selected:'
+            print("      of which the following", len(selected), 'were selected:')
         #-ap for now:
         maxLen = -1  # for individual listing, no limit on width
         fmt1   = "%-6s %-35s [1]: %s " 
@@ -430,7 +425,7 @@ class MatrixReader(object):
         N=[]
         for wf in wfs:
             if selected and float(wf.numId) not in selected: continue
-            if extended: print ''
+            if extended: print('')
             #pad with zeros
             for i in range(len(N),len(wf.cmds)):                N.append(0)
             N[len(wf.cmds)-1]+=1
@@ -438,15 +433,15 @@ class MatrixReader(object):
             for i,s in enumerate(wf.cmds):
                 if extended:
                     if i==0:
-                        print fmt1 % (wf.numId, stepNames, (str(s)+' ')[:maxLen])
+                        print(fmt1 % (wf.numId, stepNames, (str(s)+' ')[:maxLen]))
                     else:
-                        print fmt2 % ( ' ', i+1, (str(s)+' ')[:maxLen])
+                        print(fmt2 % ( ' ', i+1, (str(s)+' ')[:maxLen]))
                 else:
-                    print "%-6s %-35s "% (wf.numId, stepNames)
+                    print("%-6s %-35s "% (wf.numId, stepNames))
                     break
-        print ''
+        print('')
         for i,n in enumerate(N):
-            if n:            print n,'workflows with',i+1,'steps'
+            if n:            print(n,'workflows with',i+1,'steps')
 
         return
     
@@ -467,9 +462,9 @@ class MatrixReader(object):
             num, name, commands, stepList = val
             nameId = str(num)+'_'+name
             if nameId in self.nameList:
-                print "==> duplicate name found for ", nameId
-                print '    keeping  : ', self.nameList[nameId]
-                print '    ignoring : ', val
+                print("==> duplicate name found for ", nameId)
+                print('    keeping  : ', self.nameList[nameId])
+                print('    ignoring : ', val)
             else:
                 self.nameList[nameId] = val
 
@@ -481,29 +476,29 @@ class MatrixReader(object):
         
         for matrixFile in self.files:
             if self.what != 'all' and self.what not in matrixFile:
-                print "ignoring non-requested file",matrixFile
+                print("ignoring non-requested file",matrixFile)
                 continue
             if self.what == 'all' and not self.filesDefault[matrixFile]:
-                print "ignoring",matrixFile,"from default matrix"
+                print("ignoring",matrixFile,"from default matrix")
                 continue
             
             try:
                 self.readMatrix(matrixFile, useInput, refRel, fromScratch)
             except Exception as e:
-                print "ERROR reading file:", matrixFile, str(e)
+                print("ERROR reading file:", matrixFile, str(e))
                 raise
             
             try:
                 self.createWorkFlows(matrixFile)
             except Exception as e:
-                print "ERROR creating workflows :", str(e)
+                print("ERROR creating workflows :", str(e))
                 raise
             
                 
     def show(self, selected=None, extended=True, cafVeto=True):
 
         self.showWorkFlows(selected, extended, cafVeto)
-        print '\n','-'*80,'\n'
+        print('\n','-'*80,'\n')
 
 
     def updateDB(self):

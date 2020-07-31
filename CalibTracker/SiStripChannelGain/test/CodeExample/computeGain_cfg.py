@@ -12,7 +12,6 @@ process.load("Geometry.TrackerGeometryBuilder.trackerGeometry_cfi")
 process.load("Geometry.TrackerNumberingBuilder.trackerNumberingGeometry_cfi")
 process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
 process.load("RecoTracker.TrackProducer.TrackRefitters_cff")
-process.SiStripDetInfoFileReader = cms.Service("SiStripDetInfoFileReader")
 
 process.source = cms.Source("EmptyIOVSource",
     timetype   = cms.string('runnumber'),
@@ -79,7 +78,6 @@ process.PoolDBOutputService = cms.Service("PoolDBOutputService",
 )
 
 #process.load("DQM.SiStripMonitorClient.SiStripDQMOnline_cff")
-#process.DQMStore.referenceFileName = ''
 
 process.TFileService = cms.Service("TFileService",
         fileName = cms.string('XXX_LOCALPATH_XXX/Gains_Tree.root')  

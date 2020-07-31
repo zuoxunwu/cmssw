@@ -15,22 +15,16 @@
 #include "FWCore/Framework/interface/ESHandle.h"
 #include "DataFormats/EgammaCandidates/interface/PhotonCore.h"
 #include "DataFormats/ParticleFlowCandidate/interface/PFCandidateFwd.h"
-//#include "RecoEgamma/EgammaTools/interface/HoECalculator.h"
-//#include "RecoEcal/EgammaCoreTools/interface/EcalClusterTools.h"
-//#include "RecoEgamma/PhotonIdentification/interface/PhotonIsolationCalculator.h"
 
 // GEDPhotonCoreProducer inherits from EDProducer, so it can be a module:
 class GEDPhotonCoreProducer : public edm::stream::EDProducer<> {
+public:
+  GEDPhotonCoreProducer(const edm::ParameterSet& ps);
+  ~GEDPhotonCoreProducer() override;
 
- public:
+  void produce(edm::Event& evt, const edm::EventSetup& es) override;
 
-  GEDPhotonCoreProducer (const edm::ParameterSet& ps);
-  ~GEDPhotonCoreProducer();
-
-  virtual void produce(edm::Event& evt, const edm::EventSetup& es);
-
- private:
-
+private:
   std::string GEDPhotonCoreCollection_;
   edm::EDGetTokenT<reco::PFCandidateCollection> pfEgammaCandidates_;
   edm::EDGetTokenT<reco::ElectronSeedCollection> pixelSeedProducer_;
@@ -39,6 +33,5 @@ class GEDPhotonCoreProducer : public edm::stream::EDProducer<> {
   bool validConversions_;
   edm::ParameterSet conf_;
   bool validPixelSeeds_;
-
 };
 #endif

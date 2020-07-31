@@ -1,7 +1,6 @@
 #ifndef MessageLogger_ELseverityLevel_h
 #define MessageLogger_ELseverityLevel_h
 
-
 // ----------------------------------------------------------------------
 //
 // ELseverityLevel.h - declare objects that encode a message's urgency
@@ -38,199 +37,169 @@
 //
 // ----------------------------------------------------------------------
 
-
 #ifndef ELSTRING_H
-  #include "FWCore/MessageLogger/interface/ELstring.h"
+#include "FWCore/MessageLogger/interface/ELstring.h"
 #endif
 
-namespace edm {       
+namespace edm {
 
+  // ----------------------------------------------------------------------
+  // Forward declaration:
+  // ----------------------------------------------------------------------
 
-// ----------------------------------------------------------------------
-// Forward declaration:
-// ----------------------------------------------------------------------
+  class ELseverityLevel;
 
-class ELseverityLevel;
+  // ----------------------------------------------------------------------
+  // Synonym for type of ELseverityLevel-generating function:
+  // ----------------------------------------------------------------------
 
+  typedef ELseverityLevel const ELslGen();
 
-#ifndef __ROOTCLING__
-// ----------------------------------------------------------------------
-// Synonym for type of ELseverityLevel-generating function:
-// ----------------------------------------------------------------------
+  // ----------------------------------------------------------------------
+  // ELslProxy class template:
+  // ----------------------------------------------------------------------
 
-typedef  ELseverityLevel const  ELslGen();
+  template <ELslGen ELgen>
+  struct ELslProxy {
+    // --- birth/death:
+    //
+    ELslProxy();
+    ~ELslProxy();
 
+    // --- copying:
+    //
+    ELslProxy(ELslProxy const&);
+    ELslProxy const& operator=(ELslProxy const&);
 
-// ----------------------------------------------------------------------
-// ELslProxy class template:
-// ----------------------------------------------------------------------
+    // --- conversion::
+    //
+    operator ELseverityLevel const() const;
 
-template< ELslGen ELgen >
-struct ELslProxy  {
+    // --- forwarding:
+    //
+    int getLevel() const;
+    const ELstring getSymbol() const;
+    const ELstring getName() const;
+    const ELstring getInputStr() const;
+    const ELstring getVarName() const;
 
-  // --- birth/death:
-  //
-  ELslProxy();
-  ~ELslProxy();
+  };  // ELslProxy<ELslGen>
 
-  // --- copying:
-  //
-  ELslProxy( ELslProxy const & );
-  ELslProxy const &  operator= ( ELslProxy const & );
+  // ----------------------------------------------------------------------
 
-  // --- conversion::
-  //
-  operator ELseverityLevel const () const;
+  // ----------------------------------------------------------------------
+  // ELseverityLevel:
+  // ----------------------------------------------------------------------
 
-  // --- forwarding:
-  //
-  int             getLevel()    const;
-  const ELstring  getSymbol()   const;
-  const ELstring  getName()     const;
-  const ELstring  getInputStr() const;
-  const ELstring  getVarName()  const;
+  class ELseverityLevel {
+  public:
+    // ---  One ELseverityLevel is globally instantiated (see below)
+    // ---  for each of the following levels:
+    //
+    enum ELsev_ {
+      ELsev_noValueAssigned = 0  // default returned by map when not found
+      ,
+      ELsev_zeroSeverity  // threshold use only
+      ,
+      ELsev_success  // report reaching a milestone
+      ,
+      ELsev_info  // information
+      ,
+      ELsev_warning  // warning
+      ,
+      ELsev_error  // error detected
+      ,
+      ELsev_unspecified  // severity was not specified
+      ,
+      ELsev_severe  // future results are suspect
+      ,
+      ELsev_highestSeverity  // threshold use only
+      // -----
+      ,
+      nLevels  // how many levels?
+    };         // ELsev_
 
-};  // ELslProxy<ELslGen>
-#endif
+    // -----  Birth/death:
+    //
+    ELseverityLevel(ELsev_ lev = ELsev_unspecified);
+    ELseverityLevel(ELstring const& str);
+    // str may match getSymbol, getName, getInputStr,
+    // or getVarName -- see accessors
+    ~ELseverityLevel();
 
-// ----------------------------------------------------------------------
+    // -----  Comparator:
+    //
+    int cmp(ELseverityLevel const& e) const;
 
+    // -----  Accessors:
+    //
+    int getLevel() const;
+    const ELstring getSymbol() const;    // example: "-e"
+    const ELstring getName() const;      // example: "Error"
+    const ELstring getInputStr() const;  // example: "ERROR"
+    const ELstring getVarName() const;   // example: "ELerror"
 
-// ----------------------------------------------------------------------
-// ELseverityLevel:
-// ----------------------------------------------------------------------
+    // -----  Emitter:
+    //
+    friend std::ostream& operator<<(std::ostream& os, const ELseverityLevel& sev);
 
-class ELseverityLevel  {
+  private:
+    // Data per ELseverityLevel object:
+    //
+    int myLevel;
 
-public:
+  };  // ELseverityLevel
 
-  // ---  One ELseverityLevel is globally instantiated (see below)
-  // ---  for each of the following levels:
-  //
-  enum ELsev_  {
-    ELsev_noValueAssigned = 0  // default returned by map when not found
-  , ELsev_zeroSeverity         // threshold use only
-  , ELsev_success              // report reaching a milestone
-  , ELsev_info                 // information
-  , ELsev_warning              // warning
-  , ELsev_error                // error detected
-  , ELsev_unspecified          // severity was not specified
-  , ELsev_severe               // future results are suspect
-  , ELsev_highestSeverity      // threshold use only
-  // -----
-  , nLevels                    // how many levels?
-  };  // ELsev_
+  // ----------------------------------------------------------------------
+  // Declare the globally available severity objects,
+  // one generator function and one proxy per non-default ELsev_:
+  // ----------------------------------------------------------------------
 
-  // -----  Birth/death:
-  //
-  ELseverityLevel( ELsev_ lev = ELsev_unspecified );
-  ELseverityLevel ( ELstring const & str );
-        // str may match getSymbol, getName, getInputStr,
-        // or getVarName -- see accessors
-  ~ELseverityLevel();
+  extern ELslGen ELzeroSeverityGen;
+  extern ELslProxy<ELzeroSeverityGen> const ELzeroSeverity;
 
-  // -----  Comparator:
-  //
-  int  cmp( ELseverityLevel const & e ) const;
+  extern ELslGen ELdebugGen;
+  extern ELslProxy<ELdebugGen> const ELdebug;
 
-  // -----  Accessors:
-  //
-  int             getLevel()    const;
-  const ELstring  getSymbol()   const;  // example: "-e"
-  const ELstring  getName()     const;  // example: "Error"
-  const ELstring  getInputStr() const;  // example: "ERROR"
-  const ELstring  getVarName()  const;  // example: "ELerror"
+  extern ELslGen ELinfoGen;
+  extern ELslProxy<ELinfoGen> const ELinfo;
 
-  // -----  Emitter:
-  //
-  friend std::ostream &  operator<< (
-    std::ostream          &  os
-  , const ELseverityLevel &  sev
-  );
+  extern ELslGen ELwarningGen;
+  extern ELslProxy<ELwarningGen> const ELwarning;
 
-private:
+  extern ELslGen ELerrorGen;
+  extern ELslProxy<ELerrorGen> const ELerror;
 
-  // Data per ELseverityLevel object:
-  //
-  int    myLevel;
+  extern ELslGen ELunspecifiedGen;
+  extern ELslProxy<ELunspecifiedGen> const ELunspecified;
 
-};  // ELseverityLevel
+  extern ELslGen ELsevereGen;
+  extern ELslProxy<ELsevereGen> const ELsevere;
 
+  extern ELslGen ELhighestSeverityGen;
+  extern ELslProxy<ELhighestSeverityGen> const ELhighestSeverity;
 
-#ifndef __ROOTCLING__
-// ----------------------------------------------------------------------
-// Declare the globally available severity objects,
-// one generator function and one proxy per non-default ELsev_:
-// ----------------------------------------------------------------------
+  // ----------------------------------------------------------------------
+  // Comparators:
+  // ----------------------------------------------------------------------
 
-extern ELslGen  ELzeroSeverityGen;
-extern ELslProxy< ELzeroSeverityGen    > const  ELzeroSeverity;
+  extern bool operator==(ELseverityLevel const& e1, ELseverityLevel const& e2);
+  extern bool operator!=(ELseverityLevel const& e1, ELseverityLevel const& e2);
+  extern bool operator<(ELseverityLevel const& e1, ELseverityLevel const& e2);
+  extern bool operator<=(ELseverityLevel const& e1, ELseverityLevel const& e2);
+  extern bool operator>(ELseverityLevel const& e1, ELseverityLevel const& e2);
+  extern bool operator>=(ELseverityLevel const& e1, ELseverityLevel const& e2);
 
-extern ELslGen  ELdebugGen;
-extern ELslProxy< ELdebugGen         > const  ELdebug;
+  // ----------------------------------------------------------------------
 
-extern ELslGen  ELinfoGen;
-extern ELslProxy< ELinfoGen            > const  ELinfo;
-
-extern ELslGen  ELwarningGen;
-extern ELslProxy< ELwarningGen         > const  ELwarning;
-
-extern ELslGen  ELerrorGen;
-extern ELslProxy< ELerrorGen           > const  ELerror;
-
-extern ELslGen  ELunspecifiedGen;
-extern ELslProxy< ELunspecifiedGen     > const  ELunspecified;
-
-extern ELslGen  ELsevereGen;
-extern ELslProxy< ELsevereGen          > const  ELsevere;
-
-extern ELslGen  ELhighestSeverityGen;
-extern ELslProxy< ELhighestSeverityGen > const  ELhighestSeverity;
-#else
-ELseverityLevel const  ELzeroSeverity;
-ELseverityLevel const  ELdebug;
-ELseverityLevel const  ELinfo;
-ELseverityLevel const  ELwarning;
-ELseverityLevel const  ELerror;
-ELseverityLevel const  ELunspecified;
-ELseverityLevel const  ELsevere;
-ELseverityLevel const  ELhighestSeverity;
-#endif
-
-
-// ----------------------------------------------------------------------
-// Comparators:
-// ----------------------------------------------------------------------
-
-extern bool  operator== ( ELseverityLevel const & e1
-                        , ELseverityLevel const & e2 );
-extern bool  operator!= ( ELseverityLevel const & e1
-                        , ELseverityLevel const & e2 );
-extern bool  operator<  ( ELseverityLevel const & e1
-                        , ELseverityLevel const & e2 );
-extern bool  operator<= ( ELseverityLevel const & e1
-                        , ELseverityLevel const & e2 );
-extern bool  operator>  ( ELseverityLevel const & e1
-                        , ELseverityLevel const & e2 );
-extern bool  operator>= ( ELseverityLevel const & e1
-                        , ELseverityLevel const & e2 );
-
+}  // end of namespace edm
 
 // ----------------------------------------------------------------------
 
-}        // end of namespace edm
-
-
-// ----------------------------------------------------------------------
-
-#ifndef __ROOTCLING__
 #define ELSEVERITYLEVEL_ICC
-  #include "FWCore/MessageLogger/interface/ELseverityLevel.icc"
-#undef  ELSEVERITYLEVEL_ICC
-#endif
-
+#include "FWCore/MessageLogger/interface/ELseverityLevel.icc"
+#undef ELSEVERITYLEVEL_ICC
 
 // ----------------------------------------------------------------------
 
 #endif  // MessageLogger_ELseverityLevel_h
-

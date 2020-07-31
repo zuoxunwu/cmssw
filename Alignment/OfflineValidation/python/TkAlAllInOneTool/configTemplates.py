@@ -1,11 +1,14 @@
-from alternateValidationTemplates import *
-from offlineValidationTemplates import *
-from primaryVertexValidationTemplates import *
-from geometryComparisonTemplates import *
-from monteCarloValidationTemplates import *
-from trackSplittingValidationTemplates import *
-from zMuMuValidationTemplates import *
-from TkAlExceptions import AllInOneError
+from __future__ import absolute_import
+from .alternateValidationTemplates import *
+from .offlineValidationTemplates import *
+from .primaryVertexValidationTemplates import *
+from .primaryVertexResolutionTemplates import *
+from .geometryComparisonTemplates import *
+from .monteCarloValidationTemplates import *
+from .trackSplittingValidationTemplates import *
+from .zMuMuValidationTemplates import *
+from .TkAlExceptions import AllInOneError
+from .overlapValidationTemplates import *
 
 ######################################################################
 ######################################################################
@@ -42,27 +45,26 @@ process.prefer_conditionsIn.oO[rcdName]Oo. = cms.ESPrefer("PoolDBESSource", "con
 ######################################################################
 ######################################################################
 #batch job execution
-scriptTemplate="""
-#!/bin/bash
+scriptTemplate="""#!/bin/bash
 #init
 #ulimit -v 3072000
 #export STAGE_SVCCLASS=cmscafuser
-#save path to the LSF batch working directory  (/pool/lsf)
+#save path to the condor batch working directory  (/pool/condor)
 
-export LSFWORKDIR=`pwd -P`
-echo LSF working directory is $LSFWORKDIR
+export CONDORWORKDIR=`pwd -P`
+echo CONDOR working directory is $CONDORWORKDIR
 source /afs/cern.ch/cms/caf/setup.sh
 export X509_USER_PROXY=.oO[scriptsdir]Oo./.user_proxy
 cd .oO[CMSSW_BASE]Oo./src
 export SCRAM_ARCH=.oO[SCRAM_ARCH]Oo.
 eval `scramv1 ru -sh`
-#rfmkdir -p .oO[datadir]Oo. &>! /dev/null
+#mkdir -p .oO[datadir]Oo. &>! /dev/null
 
 #remove possible result file from previous runs
-previous_results=$(eos ls /store/caf/user/$USER/.oO[eosdir]Oo.)
+previous_results=$(ls /eos/cms/store/group/alca_trackeralign/AlignmentValidation/.oO[eosdir]Oo.)
 for file in ${previous_results}
 do
-    if [ ${file} = /store/caf/user/$USER/.oO[eosdir]Oo./.oO[outputFile]Oo. ]
+    if [ ${file} = /eos/cms/store/group/alca_trackeralign/AlignmentValidation/.oO[eosdir]Oo./.oO[outputFile]Oo. ]
     then
         xrdcp -f root://eoscms//eos/cms${file} root://eoscms//eos/cms${file}.bak
     fi
@@ -70,12 +72,12 @@ done
 
 if [[ $HOSTNAME = lxplus[0-9]*[.a-z0-9]* ]] # check for interactive mode
 then
-    rfmkdir -p .oO[workdir]Oo.
+    mkdir -p .oO[workdir]Oo.
     rm -f .oO[workdir]Oo./*
     cd .oO[workdir]Oo.
 else
-    mkdir -p $LSFWORKDIR/TkAllInOneTool
-    cd $LSFWORKDIR/TkAllInOneTool
+    mkdir -p $CONDORWORKDIR/TkAllInOneTool
+    cd $CONDORWORKDIR/TkAllInOneTool
 fi
 
 # rm -f .oO[workdir]Oo./*
@@ -84,6 +86,7 @@ fi
 #run
 pwd
 df -h .
+which cmsRun
 .oO[CommandLine]Oo.
 echo "----"
 echo "List of files in $(pwd):"
@@ -93,12 +96,12 @@ echo ""
 
 
 #retrieve
-rfmkdir -p .oO[logdir]Oo. >&! /dev/null
+mkdir -p .oO[logdir]Oo. >&! /dev/null
 gzip -f LOGFILE_*_.oO[name]Oo..log
-find . -maxdepth 1 -name "LOGFILE*.oO[alignmentName]Oo.*" -print | xargs -I {} bash -c "rfcp {} .oO[logdir]Oo."
+find . -maxdepth 1 -name "LOGFILE*.oO[alignmentName]Oo.*" -print | xargs -I {} bash -c "cp {} .oO[logdir]Oo."
 
 #copy root files to eos
-eos mkdir -p /store/caf/user/$USER/.oO[eosdir]Oo.
+mkdir -p /eos/cms/store/group/alca_trackeralign/AlignmentValidation/.oO[eosdir]Oo.
 if [ .oO[parallelJobs]Oo. -eq 1 ]
 then
     root_files=$(ls --color=never -d *.oO[alignmentName]Oo.*.root)
@@ -109,7 +112,7 @@ echo ${root_files}
 
 for file in ${root_files}
 do
-    xrdcp -f ${file} root://eoscms//eos/cms/store/caf/user/$USER/.oO[eosdir]Oo.
+    xrdcp -f ${file} root://eoscms//eos/cms/store/group/alca_trackeralign/AlignmentValidation/.oO[eosdir]Oo.
     echo ${file}
 done
 
@@ -139,6 +142,8 @@ process = cms.Process(".oO[ProcessName]Oo.")
 .oO[FileOutputTemplate]Oo.
 
 .oO[DefinePath]Oo.
+
+print("Done")
 """
 
 
@@ -163,6 +168,7 @@ process.MessageLogger.statistics.append('cout')
 CommonTrackSelectionRefitting = """
 import Alignment.CommonAlignment.tools.trackselectionRefitting as trackselRefit
 process.seqTrackselRefit = trackselRefit.getSequence(process, '.oO[trackcollection]Oo.',
+                                                     isPVValidation=.oO[ispvvalidation]Oo., 
                                                      TTRHBuilder='.oO[ttrhbuilder]Oo.',
                                                      usePixelQualityFlag=.oO[usepixelqualityflag]Oo.,
                                                      openMassWindow=.oO[openmasswindow]Oo.,
@@ -215,8 +221,7 @@ process.seqTrackselRefit*.oO[ValidationSequence]Oo.)
 
 ######################################################################
 ######################################################################
-mergeTemplate="""
-#!/bin/bash
+mergeTemplate="""#!/bin/bash
 CWD=`pwd -P`
 cd .oO[CMSSW_BASE]Oo./src
 export SCRAM_ARCH=.oO[SCRAM_ARCH]Oo.
@@ -236,11 +241,11 @@ echo "Working directory: $(pwd -P)"
 
 ###############################################################################
 # download root files from eos
-root_files=$(eos ls /store/caf/user/$USER/.oO[eosdir]Oo. \
+root_files=$(ls /eos/cms/store/group/alca_trackeralign/AlignmentValidation/.oO[eosdir]Oo. \
              | grep ".root$" | grep -v "result.root$")
 #for file in ${root_files}
 #do
-#    xrdcp -f root://eoscms//eos/cms/store/caf/user/$USER/.oO[eosdir]Oo./${file} .
+#    xrdcp -f root://eoscms//eos/cms/store/group/alca_trackeralign/AlignmentValidation/.oO[eosdir]Oo./${file} .
 #    echo ${file}
 #done
 
@@ -265,9 +270,7 @@ find . -name "*.stdout" -exec gzip -f {} \;
 
 ######################################################################
 ######################################################################
-mergeParallelOfflineTemplate="""
-#!/bin/bash
-eos='/afs/cern.ch/project/eos/installation/cms/bin/eos.select'
+mergeParallelOfflineTemplate="""#!/bin/bash
 CWD=`pwd -P`
 cd .oO[CMSSW_BASE]Oo./src
 export SCRAM_ARCH=.oO[SCRAM_ARCH]Oo.
@@ -284,11 +287,11 @@ echo "Working directory: $(pwd -P)"
 
 ###############################################################################
 # download root files from eos
-root_files=$(ls /eos/cms/store/caf/user/$USER/.oO[eosdir]Oo. \
+root_files=$(ls /eos/cms/store/group/alca_trackeralign/AlignmentValidation/.oO[eosdir]Oo. \
              | grep ".root$" | grep -v "result.root$")
 #for file in ${root_files}
 #do
-#    xrdcp -f root://eoscms//eos/cms/store/caf/user/$USER/.oO[eosdir]Oo./${file} .
+#    xrdcp -f root://eoscms//eos/cms/store/group/alca_trackeralign/AlignmentValidation/.oO[eosdir]Oo./${file} .
 #    echo ${file}
 #done
 
@@ -301,8 +304,8 @@ root_files=$(ls /eos/cms/store/caf/user/$USER/.oO[eosdir]Oo. \
 ######################################################################
 createResultsDirectoryTemplate="""
 #create results-directory and copy used configuration there
-rfmkdir -p .oO[datadir]Oo.
-rfcp .oO[logdir]Oo./usedConfiguration.ini .oO[datadir]Oo.
+mkdir -p .oO[datadir]Oo.
+cp .oO[logdir]Oo./usedConfiguration.ini .oO[datadir]Oo.
 """
 
 
@@ -326,9 +329,9 @@ ls -al .oO[mergeParallelFilePrefixes]Oo. > .oO[datadir]Oo./log_rootfilelist.txt
 compareAlignmentsExecution="""
 #merge for .oO[validationId]Oo. if it does not exist or is not up-to-date
 echo -e "\n\nComparing validations"
-eos mkdir -p /store/caf/user/$USER/.oO[eosdir]Oo./
+mkdir -p /eos/cms/store/group/alca_trackeralign/AlignmentValidation/.oO[eosdir]Oo./
 cp .oO[Alignment/OfflineValidation]Oo./scripts/compareFileAges.C .
-root -x -q -b -l "compareFileAges.C(\\\"root://eoscms.cern.ch//eos/cms/store/caf/user/$USER/.oO[eosdir]Oo./.oO[validationId]Oo._result.root\\\", \\\".oO[compareStringsPlain]Oo.\\\")"
+root -x -q -b -l "compareFileAges.C(\\\"root://eoscms.cern.ch//eos/cms/store/group/alca_trackeralign/AlignmentValidation/.oO[eosdir]Oo./.oO[validationId]Oo._result.root\\\", \\\".oO[compareStringsPlain]Oo.\\\")"
 comparisonNeeded=${?}
 
 if [[ ${comparisonNeeded} -eq 1 ]]
@@ -336,10 +339,10 @@ then
     cp .oO[compareAlignmentsPath]Oo. .
     root -x -q -b -l '.oO[compareAlignmentsName]Oo.++(\".oO[compareStrings]Oo.\", ".oO[legendheader]Oo.", ".oO[customtitle]Oo.", ".oO[customrighttitle]Oo.", .oO[bigtext]Oo.)'
     mv result.root .oO[validationId]Oo._result.root
-    xrdcp -f .oO[validationId]Oo._result.root root://eoscms//eos/cms/store/caf/user/$USER/.oO[eosdir]Oo.
+    xrdcp -f .oO[validationId]Oo._result.root root://eoscms//eos/cms/store/group/alca_trackeralign/AlignmentValidation/.oO[eosdir]Oo.
 else
     echo ".oO[validationId]Oo._result.root is up-to-date, no need to compare again."
-    xrdcp -f root://eoscms//eos/cms/store/caf/user/$USER/.oO[eosdir]Oo./.oO[validationId]Oo._result.root .
+    xrdcp -f root://eoscms//eos/cms/store/group/alca_trackeralign/AlignmentValidation/.oO[eosdir]Oo./.oO[validationId]Oo._result.root .
 fi
 """
 

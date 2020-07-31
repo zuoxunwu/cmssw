@@ -1,8 +1,18 @@
 import FWCore.ParameterSet.Config as cms
 
-process = cms.Process("DQM")
-# for live online DQM in P5
-process.load("DQM.Integration.config.inputsource_cfi")
+import sys
+from Configuration.ProcessModifiers.run2_HECollapse_2018_cff import run2_HECollapse_2018
+process = cms.Process("DQM", run2_HECollapse_2018)
+
+unitTest = False
+if 'unitTest=True' in sys.argv:
+	unitTest=True
+
+if unitTest:
+  process.load("DQM.Integration.config.unittestinputsource_cfi")
+else:
+  # for live online DQM in P5
+  process.load("DQM.Integration.config.inputsource_cfi")
 # used in the old input source
 #process.DQMEventStreamHttpReader.SelectHLTOutput = cms.untracked.string('hltOutputHLTDQM')
 
@@ -14,7 +24,6 @@ process.load("DQM.Integration.config.inputsource_cfi")
 #)
 
 process.load("DQM.Integration.config.environment_cfi")
-process.DQMStore.referenceFileName = "/dqmdata/dqm/reference/hlt_reference.root"
 
 process.dqmEnv.subSystemFolder = 'HLT'
 process.dqmSaver.tag = 'HLT'
@@ -22,9 +31,15 @@ process.dqmSaver.tag = 'HLT'
 process.load("Configuration.StandardSequences.GeometryRecoDB_cff")
 process.load("Configuration.StandardSequences.MagneticField_cff")
 process.GlobalTrackingGeometryESProducer = cms.ESProducer( "GlobalTrackingGeometryESProducer" ) # for muon hlt dqm
+process.HLTSiStripClusterChargeCutNone = cms.PSet(  value = cms.double( -1.0 ) )
+process.ClusterShapeHitFilterESProducer = cms.ESProducer( "ClusterShapeHitFilterESProducer",
+    ComponentName = cms.string( "ClusterShapeHitFilter" ),
+    PixelShapeFileL1 = cms.string( "RecoPixelVertexing/PixelLowPtUtilities/data/pixelShapePhase1_loose.par" ),
+    clusterChargeCut = cms.PSet(  refToPSet_ = cms.string( "HLTSiStripClusterChargeCutNone" ) ),
+    PixelShapeFile = cms.string( "RecoPixelVertexing/PixelLowPtUtilities/data/pixelShapePhase1_noL1.par" )
+)
 #SiStrip Local Reco
-process.SiStripDetInfoFileReader = cms.Service("SiStripDetInfoFileReader")
-process.TkDetMap = cms.Service("TkDetMap")
+process.load("CalibTracker.SiStripCommon.TkDetMapESProducer_cfi")
 
 #---- for P5 (online) DB access
 process.load("DQM.Integration.config.FrontierCondition_GT_cfi")
@@ -104,16 +119,9 @@ process.load("DQM.HLTEvF.HLTObjectMonitor_cff")
 ### for Proton-Lead collisions only (2016 Proton-Lead Era)
 #process.load("DQM.HLTEvF.HLTObjectMonitorProtonLead_cff")
 
-# added for hlt scalars
-process.load("DQM.TrigXMonitor.HLTSeedL1LogicScalers_cfi")
-# added for hlt scalars
-process.hltSeedL1Logic.l1GtData = cms.InputTag("l1GtUnpack","","DQM")
-process.hltSeedL1Logic.dqmFolder =    cms.untracked.string("HLT/HLTSeedL1LogicScalers_SM")
-
 process.load("DQM.HLTEvF.HLTObjectMonitor_Client_cff")
 
 #process.p = cms.EndPath(process.hlts+process.hltsClient)
-process.p = cms.EndPath(process.hltSeedL1Logic)
 
 process.pp = cms.Path(process.dqmEnv+process.dqmSaver)
 #process.hltResults.plotAll = True

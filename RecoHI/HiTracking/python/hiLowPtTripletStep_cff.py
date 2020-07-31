@@ -57,7 +57,7 @@ hiLowPtTripletStepTracksHitDoublets = _hitPairEDProducer.clone(
     clusterCheck = "",
     seedingLayers = "hiLowPtTripletStepSeedLayers",
     trackingRegions = "hiLowPtTripletStepTrackingRegions",
-    maxElement = 0,
+    maxElement = 50000000,
     produceIntermediateHitDoublets = True,
 )
 import RecoPixelVertexing.PixelLowPtUtilities.LowPtClusterShapeSeedComparitor_cfi
@@ -231,20 +231,21 @@ hiLowPtTripletStepQual = RecoTracker.FinalTrackSelectors.trackListMerger_cfi.tra
 
 # Final sequence
 
-hiLowPtTripletStep = cms.Sequence(hiLowPtTripletStepClusters*
-                                        hiLowPtTripletStepSeedLayers*
-                                        hiLowPtTripletStepTrackingRegions*
-                                        hiLowPtTripletStepTracksHitDoublets*
-                                        hiLowPtTripletStepTracksHitTriplets*
-                                        pixelFitterByHelixProjections*
-                                        hiLowPtTripletStepPixelTracksFilter*
-                                        hiLowPtTripletStepPixelTracks*hiLowPtTripletStepSeeds*
-                                        hiLowPtTripletStepTrackCandidates*
-                                        hiLowPtTripletStepTracks*
-                                        hiLowPtTripletStepSelector*
+hiLowPtTripletStepTask = cms.Task(hiLowPtTripletStepClusters,
+                                        hiLowPtTripletStepSeedLayers,
+                                        hiLowPtTripletStepTrackingRegions,
+                                        hiLowPtTripletStepTracksHitDoublets,
+                                        hiLowPtTripletStepTracksHitTriplets,
+                                        pixelFitterByHelixProjections,
+                                        hiLowPtTripletStepPixelTracksFilter,
+                                        hiLowPtTripletStepPixelTracks,hiLowPtTripletStepSeeds,
+                                        hiLowPtTripletStepTrackCandidates,
+                                        hiLowPtTripletStepTracks,
+                                        hiLowPtTripletStepSelector,
                                         hiLowPtTripletStepQual
                                         )
-hiLowPtTripletStep_Phase1 = hiLowPtTripletStep.copy()
-hiLowPtTripletStep_Phase1.replace(hiLowPtTripletStepTracksHitDoublets, hiLowPtTripletStepTracksHitDoubletsCA)
-hiLowPtTripletStep_Phase1.replace(hiLowPtTripletStepTracksHitTriplets, hiLowPtTripletStepTracksHitTripletsCA)
-trackingPhase1.toReplaceWith(hiLowPtTripletStep, hiLowPtTripletStep_Phase1)
+hiLowPtTripletStep = cms.Sequence(hiLowPtTripletStepTask)
+hiLowPtTripletStepTask_Phase1 = hiLowPtTripletStepTask.copy()
+hiLowPtTripletStepTask_Phase1.replace(hiLowPtTripletStepTracksHitDoublets, hiLowPtTripletStepTracksHitDoubletsCA)
+hiLowPtTripletStepTask_Phase1.replace(hiLowPtTripletStepTracksHitTriplets, hiLowPtTripletStepTracksHitTripletsCA)
+trackingPhase1.toReplaceWith(hiLowPtTripletStepTask, hiLowPtTripletStepTask_Phase1)

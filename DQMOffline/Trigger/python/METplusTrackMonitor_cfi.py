@@ -4,6 +4,11 @@ from DQMOffline.Trigger.metPlusTrackMonitoring_cfi import metPlusTrackMonitoring
 
 hltMETplusTrackMonitoring = metPlusTrackMonitoring.clone()
 hltMETplusTrackMonitoring.FolderName = cms.string('HLT/MET/MET105_IsoTrk50/')
+hltMETplusTrackMonitoring.histoPSet.lsPSet = cms.PSet(
+  nbins = cms.uint32(  250 ),
+  xmin  = cms.double(    0.),
+  xmax  = cms.double( 2500.),
+)
 hltMETplusTrackMonitoring.histoPSet.metPSet = cms.PSet(
   nbins = cms.uint32 (100),
   xmin  = cms.double(-0.5),
@@ -61,5 +66,4 @@ hltMETplusTrackMonitoring.denGenericTriggerEventPSet.dcsPartitions  = cms.vint32
 hltMETplusTrackMonitoring.denGenericTriggerEventPSet.andOrDcs       = cms.bool( False )
 hltMETplusTrackMonitoring.denGenericTriggerEventPSet.errorReplyDcs  = cms.bool( True )
 hltMETplusTrackMonitoring.denGenericTriggerEventPSet.verbosityLevel = cms.uint32(1)
-hltMETplusTrackMonitoring.denGenericTriggerEventPSet.hltPaths       = cms.vstring("HLT_IsoMu27_v*", "HLT_IsoTkMu27_v*")
-
+hltMETplusTrackMonitoring.denGenericTriggerEventPSet.hltPaths       = cms.vstring("HLT_IsoMu27_v*")

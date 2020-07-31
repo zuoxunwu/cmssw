@@ -1,11 +1,11 @@
 import FWCore.ParameterSet.Config as cms
-
 from DQMServices.Core.DQMEDHarvester import DQMEDHarvester
+from DQMOffline.Trigger.HEP17Monitoring_Client_cff import *
 from DQMOffline.Trigger.HTMonitoring_Client_cff import *
 from DQMOffline.Trigger.METMonitoring_Client_cff import *
 
 photonEfficiency = DQMEDHarvester("DQMGenericClient",
-    subDirs        = cms.untracked.vstring("HLT/Photon/*"),
+    subDirs        = cms.untracked.vstring("HLT/EXO/Photon/*"),
     verbose        = cms.untracked.uint32(0), # Set to 2 for all messages
     resolution     = cms.vstring(),
     efficiency     = cms.vstring(
@@ -22,8 +22,20 @@ photonEfficiency = DQMEDHarvester("DQMGenericClient",
     ),
 )
 
+photonVBF_jetMETEfficiency = DQMEDHarvester("DQMGenericClient",
+#    subDirs        = cms.untracked.vstring("HLT/Photon/Photon50_R9Id90_HE10_IsoM_EBOnly_PFJetsMJJ300DEta3_PFMET50", "HLT/Photon/Photon75_R9Id90_HE10_IsoM_EBOnly_PFJetsMJJ300DEta3"),
+    subDirs        = cms.untracked.vstring("HLT/EXO/Photon/Photon50_R9Id90_HE10_IsoM_EBOnly_PFJetsMJJ300DEta3_PFMET50", "HLT/EXO/Photon/Photon75_R9Id90_HE10_IsoM_EBOnly_PFJetsMJJ300DEta3"),
+    verbose        = cms.untracked.uint32(0), # Set to 2 for all messages
+    resolution     = cms.vstring(),
+    efficiency     = cms.vstring(
+        "effic_mjj         'Mjj turnON;            Mjj [GeV]; efficiency'     mjj_numerator          mjj_denominator",
+        "effic_detajj      'DEtajj turnON;            DEtajj; efficiency'     detajj_numerator       detajj_denominator",
+        "effic_met         'MET turnON;            MET [GeV]; efficiency'     met_numerator          met_denominator"
+    )
+)
+
 muonEfficiency = DQMEDHarvester("DQMGenericClient",
-    subDirs        = cms.untracked.vstring("HLT/Muon/*"),
+    subDirs        = cms.untracked.vstring("HLT/EXO/Muon/*"),
     verbose        = cms.untracked.uint32(0), # Set to 2 for all messages                                                                                                                                          
     resolution     = cms.vstring(),
     efficiency     = cms.vstring(
@@ -43,7 +55,7 @@ muonEfficiency = DQMEDHarvester("DQMGenericClient",
 )
 
 NoBPTXEfficiency = DQMEDHarvester("DQMGenericClient",
-    subDirs        = cms.untracked.vstring("HLT/NoBPTX/*"),
+    subDirs        = cms.untracked.vstring("HLT/EXO/NoBPTX/*"),
     verbose        = cms.untracked.uint32(0), # Set to 2 for all messages
     resolution     = cms.vstring(),
     efficiency     = cms.vstring(
@@ -61,8 +73,26 @@ NoBPTXEfficiency = DQMEDHarvester("DQMGenericClient",
     ),
 )
 
+DiDispStaMuonEfficiency = DQMEDHarvester("DQMGenericClient",
+    subDirs        = cms.untracked.vstring("HLT/EXO/DiDispStaMuon/*"),
+    verbose        = cms.untracked.uint32(0), # Set to 2 for all messages
+    resolution     = cms.vstring(),
+    efficiency     = cms.vstring(
+        "effic_muonPt          'Muon pt turnON; DisplacedStandAlone Muon p_{T} [GeV]; Efficiency'     muonPt_numerator          muonPt_denominator",
+        "effic_muonPtNoDxyCut  'Muon pt turnON; DisplacedStandAlone Muon p_{T} [GeV]; Efficiency'     muonPtNoDxyCut_numerator  muonPtNoDxyCut_denominator",
+        "effic_muonPt_variable 'Muon pt turnON; DisplacedStandAlone Muon p_{T} [GeV]; Efficiency'     muonPt_variable_numerator muonPt_variable_denominator",
+        "effic_muonEta          'Muon eta eff; DisplacedStandAlone Muon #eta; Efficiency'     muonEta_numerator          muonEta_denominator",
+        "effic_muonPhi          'Muon phi eff; DisplacedStandAlone Muon #phi; Efficiency'     muonPhi_numerator          muonPhi_denominator",
+        "effic_muonDxy          'Muon dxy eff; DisplacedStandAlone Muon #dxy; Efficiency'     muonDxy_numerator          muonDxy_denominator",
+    ),
+    efficiencyProfile = cms.untracked.vstring(
+        "effic_muon_vs_LS 'Muon pt efficiency vs LS; LS; Muon p_{T} Efficiency' muonVsLS_numerator muonVsLS_denominator",
+    ),
+)
+
+
 METplusTrackEfficiency = DQMEDHarvester("DQMGenericClient",
-    subDirs = cms.untracked.vstring("HLT/MET/MET105_IsoTrk50/", "HLT/MET/MET120_IsoTrk50/"),
+    subDirs = cms.untracked.vstring("HLT/EXO/MET/MET105_IsoTrk50/", "HLT/EXO/MET/MET120_IsoTrk50/"),
     verbose = cms.untracked.uint32(0), # Set to 2 for all messages
     resolution = cms.vstring(),
     efficiency = cms.vstring(
@@ -182,6 +212,8 @@ DisplacedJet_jetRatioHemHep17 = DQMEDHarvester("DQMGenericClient",
          "ratio_calojetphi_HEP17VSHEM17         'HEP17/HEM17 vs #phi;          CaloJet #phi [GeV]; Ratio'  effic_calojetphi_HEP17 effic_calojetphi_HEM17 simpleratio",
          "ratio_calojeteta_HEP17VSHEM17         'HEP17/HEM17 vs |#eta|;        CaloJet(|#eta|) ; Ratio'    effic_calojetabseta_HEP17 effic_calojetabseta_HEM17 simpleratio",
 
+         "ratio_calojetpT_HEP17VSHEP18          'HEP17/HEP18 vs pT;            CaloJet(pT) [GeV]; Ratio'   effic_calojetpT_HEP17 effic_calojetpT_HEP18 simpleratio" ,
+         "ratio_calojetpT_pTTresh_HEP17VSHEP18  'HEP17/HEP18 vs pT;            CaloJet(pT) [GeV]; Ratio'   effic_calojetpT_HEP17_pTThresh effic_calojetpT_HEP18_pTThresh simpleratio" ,
     )
 
 
@@ -190,13 +222,16 @@ DisplacedJet_jetRatioHemHep17 = DQMEDHarvester("DQMGenericClient",
 
 exoticaClient = cms.Sequence(
     NoBPTXEfficiency
+  + DiDispStaMuonEfficiency
   + photonEfficiency
+  + photonVBF_jetMETEfficiency
   + DisplacedJet_htEfficiency
   + (DisplacedJet_jetEfficiency*DisplacedJet_jetRatioHemHep17)
   + htClient
   + metClient
   + METplusTrackEfficiency
   + muonEfficiency
+  + hep17Efficiency
 )
 
 from DQMOffline.Trigger.TrackingMonitoring_Client_cff import *

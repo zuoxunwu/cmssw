@@ -17,7 +17,7 @@ process.load('L1Trigger.L1TCalorimeter.caloStage2Params_2016_v3_3_cfi')
 
 # 2016_3_3 and 3_3_HI
 
-process.l1ew = cms.EDAnalyzer("L1TMuonEndcapWriter")
+process.l1ew = cms.EDAnalyzer("L1TMuonEndCapParamsWriter") ## What does this string match / refer to? - AWB 10.04.18
 process.l1bw = cms.EDAnalyzer("L1TMuonBarrelParamsWriter")
 process.l1gw = cms.EDAnalyzer("L1TMuonGlobalParamsWriter")
 process.l1cw = cms.EDAnalyzer("L1TCaloStage2ParamsWriter")
@@ -28,8 +28,8 @@ outputDB = cms.Service("PoolDBOutputService",
                        connect = cms.string('sqlite_file:l1configPP.db'),
                        toPut   = cms.VPSet(
                            cms.PSet(
-                               record = cms.string('L1TMuonEndcapParamsRcd'),
-                               tag = cms.string("L1TMuonEndcapParams_static_v91.10")
+                               record = cms.string('L1TMuonEndCapParamsRcd'),
+                               tag = cms.string("L1TMuonEndCapParams_static_v91.10")
                            ),
                            cms.PSet(
                                record = cms.string('L1TMuonBarrelParamsRcd'),

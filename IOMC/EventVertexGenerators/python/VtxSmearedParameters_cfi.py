@@ -33,8 +33,57 @@ GaussVtxSigmaZ4cmSmearingParameters = cms.PSet(
     SigmaZ = cms.double(4.0),
     TimeOffset = cms.double(0.0)
 )
+# Gaussian smearing
+# Flat optics for Run3 - Low SigmaZ
+# SigmaZ = 4.2 cm
+# SigmaX = 11.8 um
+# SigmaY = 5.5 um
+# BS positions extracted from 2018B 3.8T data, run 316199, fill 6675 (from StreamExpressAlignment, HP BS):
+# X0         =  0.09676  [cm]
+# Y0         = -0.06245  [cm]
+# Z0         = -0.292    [cm]
+# BPIX absolute position (from https://cms-conddb.cern.ch/cmsDbBrowser/payload_inspector/Prod):
+# X = 0.0859918 cm
+# Y = -0.104172 cm
+# Z = -0.327748 cm
+Run3FlatOpticsGaussVtxSigmaZ4p2cmSmearingParameters = cms.PSet(
+    MeanX = cms.double(0.0107682),
+    MeanY = cms.double(0.041722),
+    MeanZ = cms.double(0.035748),
+    SigmaY = cms.double(0.00055),
+    SigmaX = cms.double(0.00118),
+    SigmaZ = cms.double(4.2),
+    TimeOffset = cms.double(0.0)
+)
+# Gaussian smearing
+# Flat optics for Run3 - High SigmaZ
+# SigmaZ = 5.3 cm
+# SigmaX = 15 um
+# SigmaY = 13 um
+# BS positions extracted from 2018B 3.8T data, run 316199, fill 6675 (from StreamExpressAlignment, HP BS):
+# X0         =  0.09676  [cm]
+# Y0         = -0.06245  [cm]
+# Z0         = -0.292    [cm]
+# BPIX absolute position (from https://cms-conddb.cern.ch/cmsDbBrowser/payload_inspector/Prod):
+# X = 0.0859918 cm
+# Y = -0.104172 cm
+# Z = -0.327748 cm
+Run3FlatOpticsGaussVtxSigmaZ5p3cmSmearingParameters = cms.PSet(
+    MeanX = cms.double(0.0107682),
+    MeanY = cms.double(0.041722),
+    MeanZ = cms.double(0.035748),
+    SigmaY = cms.double(0.0013),
+    SigmaX = cms.double(0.0015),
+    SigmaZ = cms.double(5.3),
+    TimeOffset = cms.double(0.0)
+)
 
 # Flat Smearing
+# Important note: flat independent distributions in Z and T are not correct for physics production
+# In reality, if two flat beams interact the real distribution will not be flat with independent Z and T
+# but Z and T will be correlated, as example in GaussEvtVtxGenerator.
+# Can restore correlation via MinT += (MinZ - MaxZ)/2 and MaxT += (MaxZ - MinZ)/2
+# in [ns] units (recall c_light = 29.98cm/ns)
 FlatVtxSmearingParameters = cms.PSet(
     MaxZ = cms.double(5.3),
     MaxX = cms.double(0.0015),
@@ -42,7 +91,8 @@ FlatVtxSmearingParameters = cms.PSet(
     MinX = cms.double(-0.0015),
     MinY = cms.double(-0.0015),
     MinZ = cms.double(-5.3),
-    TimeOffset = cms.double(0.0)
+    MaxT = cms.double(0.177),
+    MinT = cms.double(-0.177)
 )
 #############################################
 # Beta functions smearing (pp 7+7 TeV)
@@ -575,6 +625,129 @@ Realistic25ns13TeVEarly2017CollisionVtxSmearingParameters = cms.PSet(
     Z0 = cms.double(0.82054  )
 )
 
+# Beam spot extracted from data for 2017 pp run @ 5 TeV
+Realistic5TeVppCollision2017VtxSmearingParameters = cms.PSet(
+    Phi = cms.double(0.0),
+    BetaStar = cms.double(311),
+    Emittance = cms.double(3.8e-8),
+    Alpha = cms.double(0.0),
+    SigmaZ = cms.double(5.82),
+    TimeOffset = cms.double(0.0),
+    X0 = cms.double(-0.0228),
+    Y0 = cms.double(0.0795),
+    Z0 = cms.double(0.619)
+)
+
+# Fixed Emittance (X2) in Beam spot extracted from data for 2017 pp run @ 5 TeV
+Fixed_EmitRealistic5TeVppCollision2017VtxSmearingParameters = cms.PSet(
+    Phi = cms.double(0.0),
+    BetaStar = cms.double(311),
+    Emittance = cms.double(7.6e-8),
+    Alpha = cms.double(0.0),
+    SigmaZ = cms.double(5.82),
+    TimeOffset = cms.double(0.0),
+    X0 = cms.double(-0.0228),
+    Y0 = cms.double(0.0795),
+    Z0 = cms.double(0.619)
+)
+
+
+# From 2018B 3.8T data
+# BS parameters extracted from run 316199, fill 6675 (from StreamExpressAlignment, HP BS):
+# X0         =  0.09676  [cm]
+# Y0         = -0.06245  [cm]
+# Z0         = -0.292    [cm]
+# sigmaZ0    =  3.5      [cm] => mean sigmaZ0 in this run is 3.2676
+# BeamWidthX 0.0008050
+# BeamWidthY 0.0006238
+#
+# From LHC calculator, emittance is 1.634e-8 cm
+# https://lpc.web.cern.ch/lpc/lumi2.html
+#
+# BPIX absolute position (from https://cms-conddb.cern.ch/cmsDbBrowser/payload_inspector/Prod):
+# X = 0.0859918 cm
+# Y = -0.104172 cm
+# Z = -0.327748 cm
+Realistic25ns13TeVEarly2018CollisionVtxSmearingParameters = cms.PSet(
+    Phi = cms.double(0.0),
+    BetaStar = cms.double(30.0),
+    Emittance = cms.double(1.634e-8),
+    Alpha = cms.double(0.0),
+    SigmaZ = cms.double(3.5),
+    TimeOffset = cms.double(0.0),
+    X0 = cms.double(0.0107682),
+    Y0 = cms.double(0.041722 ),
+    Z0 = cms.double(0.035748 )
+)
+
+# Run3 possible beam parameters
+# Round optics - Low SigmaZ = 3.4 cm
+# From 2018B 3.8T data
+# BS parameters extracted from run 316199, fill 6675 (from StreamExpressAlignment, HP BS):
+# X0         =  0.09676  [cm]
+# Y0         = -0.06245  [cm]
+# Z0         = -0.292    [cm]
+# sigmaZ0    =  3.2676   [cm]
+# BeamWidthX 0.0008050
+# BeamWidthY 0.0006238
+#
+# set SigmaZ0 = 3.4 [cm]
+# set BeamWidthX = BeamWidthY = 11.5 [um]
+# set beta* = 28 cm
+# energy = 13 TeV
+# From LHC calculator, emittance is 4.762e-8 cm
+# https://lpc.web.cern.ch/lpc/lumi2.html
+#
+# BPIX absolute position (from https://cms-conddb.cern.ch/cmsDbBrowser/payload_inspector/Prod):
+# X = 0.0859918 cm
+# Y = -0.104172 cm
+# Z = -0.327748 cm
+Run3RoundOptics25ns13TeVLowSigmaZVtxSmearingParameters = cms.PSet(
+    Phi = cms.double(0.0),
+    BetaStar = cms.double(28.0),
+    Emittance = cms.double(4.762e-8),
+    Alpha = cms.double(0.0),
+    SigmaZ = cms.double(3.4),
+    TimeOffset = cms.double(0.0),
+    X0 = cms.double(0.0107682),
+    Y0 = cms.double(0.041722 ),
+    Z0 = cms.double(0.035748 )
+)
+
+# Run3 possible beam parameters
+# Round optics - High SigmaZ = 5.7 cm
+# From 2018B 3.8T data
+# BS parameters extracted from run 316199, fill 6675 (from StreamExpressAlignment, HP BS):
+# X0         =  0.09676  [cm]
+# Y0         = -0.06245  [cm]
+# Z0         = -0.292    [cm]
+# sigmaZ0    =  3.2676   [cm]
+# BeamWidthX 0.0008050
+# BeamWidthY 0.0006238
+#
+# set SigmaZ0 = 5.7 [cm]
+# set BeamWidthX = BeamWidthY = 11.5 [um]
+# set beta* = 28 cm
+# energy = 13 TeV
+# From LHC calculator, emittance is 4.762e-8 cm
+# https://lpc.web.cern.ch/lpc/lumi2.html
+#
+# BPIX absolute position (from https://cms-conddb.cern.ch/cmsDbBrowser/payload_inspector/Prod):
+# X = 0.0859918 cm
+# Y = -0.104172 cm
+# Z = -0.327748 cm
+Run3RoundOptics25ns13TeVHighSigmaZVtxSmearingParameters = cms.PSet(
+    Phi = cms.double(0.0),
+    BetaStar = cms.double(28.0),
+    Emittance = cms.double(4.762e-8),
+    Alpha = cms.double(0.0),
+    SigmaZ = cms.double(5.7),
+    TimeOffset = cms.double(0.0),
+    X0 = cms.double(0.0107682),
+    Y0 = cms.double(0.041722 ),
+    Z0 = cms.double(0.035748 )
+)
+
 # Test HF offset
 ShiftedCollision2015VtxSmearingParameters = cms.PSet(
     Phi = cms.double(0.0),
@@ -625,7 +798,23 @@ NominalHICollision2015VtxSmearingParameters = cms.PSet(
 )
 
 # updated numbers based on beamspot fits to 2015 PbPb data
-RealisticHICollision2015VtxSmearingParameters = cms.PSet(
+# Later found to be incorrect, see following entry
+# RealisticHICollision2015VtxSmearingParameters = cms.PSet(
+#    Phi = cms.double(0.0),
+#    BetaStar = cms.double(60.0),
+#    Emittance = cms.double(1.70e-07),
+#    Alpha = cms.double(0.0),
+#    SigmaZ = cms.double(5.2278),
+#    TimeOffset = cms.double(0.0),
+#    X0 = cms.double(0.1025),
+#    Y0 = cms.double(0.1654),
+#    Z0 = cms.double(3.2528)
+#)
+# updated numbers for 2015 PbPb data with Z centroid from fixed beamspot fits
+# See discussion here https://hypernews.cern.ch/HyperNews/CMS/get/hi-general/3968.html
+# See plot of difference here: https://www.dropbox.com/s/tsnkgvvpkdqjtyq/vzDataMCOverlay_c_20170420.pdf?dl=0
+#
+RealisticHICollisionFixZ2015VtxSmearingParameters = cms.PSet(
     Phi = cms.double(0.0),
     BetaStar = cms.double(60.0),
     Emittance = cms.double(1.70e-07),
@@ -634,7 +823,48 @@ RealisticHICollision2015VtxSmearingParameters = cms.PSet(
     TimeOffset = cms.double(0.0),
     X0 = cms.double(0.1025),
     Y0 = cms.double(0.1654),
-    Z0 = cms.double(3.2528)
+    Z0 = cms.double(0.771)
+)
+# Numbers based on beamspot fits to 2017 XeXe data
+# Documentation here: https://twiki.cern.ch/twiki/pub/CMS/XeXeRereco/IanLRU_AlCaTkAlBS_20171130_approvedByLucaSara.pdf
+RealisticXeXeCollision2017VtxSmearingParameters = cms.PSet(
+    Phi = cms.double(0.0),
+    BetaStar = cms.double(30.0),
+    Emittance = cms.double(4.33e-08),
+    Alpha = cms.double(0.0),
+    SigmaZ = cms.double(4.64),
+    TimeOffset = cms.double(0.0),
+    X0 = cms.double(-0.026),
+    Y0 = cms.double(0.081),
+    Z0 = cms.double(0.645)
+)
+
+# From fit to 5 TeV PbPb data
+# From 2018 PbPb  data
+# BS parameters extracted from run 327211, Fill 7471 (from StreamExpressAlignment, HP, BS):
+# X0         =  0.09443  [cm]
+# Y0         = -0.06377  [cm]
+# Z0         =  0.58067  [cm]
+# sigmaZ0    =  4.969    [cm]
+# BeamWidthX 0.0014392
+# BeamWidthY 0.0011545
+#
+# Emittance is 3.36e-8 cm. Calculated by  ((BeamWidthX + BeamWidth)/2)^2/BetaStar
+#
+# BPIX absolute position (from https://cms-conddb.cern.ch/cmsDbBrowser/payload_inspector/Prod):
+# X =  0.084335 cm
+# Y = -0.110381 cm
+# Z = -0.321904 cm
+RealisticPbPbCollision2018VtxSmearingParameters = cms.PSet(
+    Phi = cms.double(0.0),
+    BetaStar = cms.double(50),
+    Emittance = cms.double(3.36e-08),
+    Alpha = cms.double(0.0),
+    SigmaZ = cms.double(4.97),
+    TimeOffset = cms.double(0.0),
+    X0 = cms.double(0.010),
+    Y0 = cms.double(0.047),
+    Z0 = cms.double(0.903)
 )
 
 # Estimate for 2015 pp collisions at 5.02 TeV, based on feedback from accelerator:  beta* ~ 400cm, normalized emittance = 2.5 um, SigmaZ similar to RunIIWinter15GS

@@ -1,13 +1,22 @@
+from __future__ import print_function
 import FWCore.ParameterSet.Config as cms
+import sys
 import os
 
 process = cms.Process("DTDQM")
 
+unitTest = False
+if 'unitTest=True' in sys.argv:
+    unitTest=True
+
 #----------------------------
 #### Event Source
 #----------------------------
-# for live online DQM in P5
-process.load("DQM.Integration.config.inputsource_cfi")
+if unitTest:
+    process.load("DQM.Integration.config.unittestinputsource_cfi")
+else:
+    # for live online DQM in P5
+    process.load("DQM.Integration.config.inputsource_cfi")
 
 # for testing in lxplus
 #process.load("DQM.Integration.config.fileinputsource_cfi")
@@ -16,8 +25,6 @@ process.load("DQM.Integration.config.inputsource_cfi")
 #### DQM Environment
 #----------------------------
 process.load("DQM.Integration.config.environment_cfi")
-process.DQMStore.referenceFileName = '/dqmdata/dqm/reference/dt_reference.root'
-#process.DQMStore.referenceFileName = "DT_reference.root"
 
 #----------------------------
 #### DQM Live Environment
@@ -30,6 +37,8 @@ process.dqmSaver.tag = "DT"
 
 # prepare the output directory
 filePath = "/globalscratch/dqm4ml_" + process.dqmRunConfig.type.value()
+if unitTest:
+    filePath = "./dqm4ml_" + process.dqmRunConfig.type.value()
 try:
     os.makedirs(filePath)
 except:
@@ -37,12 +46,13 @@ except:
 
 process.dqmSaver.backupLumiCount = 10
 process.dqmSaver.keepBackupLumi = True
+
 process.dqmSaver.path = filePath
 
 # disable DQM gui
-print "old:",process.DQM.collectorHost
+print("old:",process.DQM.collectorHost)
 process.DQM.collectorHost = cms.untracked.string('dqm-blackhole.cms')
-print "new:",process.DQM.collectorHost
+print("new:",process.DQM.collectorHost)
 ### END OF CUSTOMIZE FOR ML
 
 # DT reco and DQM sequences
@@ -72,14 +82,14 @@ process.dtunpacker.inputLabel = cms.InputTag("rawDataCollector")
 process.gtDigis.DaqGtInputTag = cms.InputTag("rawDataCollector")
 process.scalersRawToDigi.scalersInputTag = cms.InputTag("rawDataCollector")
 
-print "Running with run type = ", process.runType.getRunType()
+print("Running with run type = ", process.runType.getRunType())
 
 #----------------------------
 #### pp run settings 
 #----------------------------
 
 if (process.runType.getRunType() == process.runType.pp_run):
-    process.DQMStore.referenceFileName = '/dqmdata/dqm/reference/dt_reference_pp.root'
+    pass
 
 
 #----------------------------
@@ -87,7 +97,7 @@ if (process.runType.getRunType() == process.runType.pp_run):
 #----------------------------
 
 if (process.runType.getRunType() == process.runType.cosmic_run):
-    process.DQMStore.referenceFileName = '/dqmdata/dqm/reference/dt_reference_cosmic.root'
+    pass
 
 
 #----------------------------
@@ -95,7 +105,6 @@ if (process.runType.getRunType() == process.runType.cosmic_run):
 #----------------------------
 
 if (process.runType.getRunType() == process.runType.hi_run):
-    process.dtunpacker.fedbyType = cms.bool(False)
     process.twinMuxStage2Digis.DTTM7_FED_Source = cms.InputTag("rawDataRepacker")
     process.dtunpacker.inputLabel = cms.InputTag("rawDataRepacker")
     process.gtDigis.DaqGtInputTag = cms.InputTag("rawDataRepacker")
@@ -103,7 +112,6 @@ if (process.runType.getRunType() == process.runType.hi_run):
     
     process.dtDigiMonitor.ResetCycle = cms.untracked.int32(9999)
 
-    process.DQMStore.referenceFileName = '/dqmdata/dqm/reference/dt_reference_hi.root'
 
 
 ### process customizations included here

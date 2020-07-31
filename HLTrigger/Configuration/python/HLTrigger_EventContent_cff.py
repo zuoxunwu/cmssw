@@ -2,9 +2,10 @@ import FWCore.ParameterSet.Config as cms
 
 # EventContent for HLT related products.
 
-# This file exports the following five EventContent blocks:
+# This file exports the following EventContent blocks:
 #   HLTriggerRAW  HLTriggerRECO  HLTriggerAOD (without DEBUG products)
 #   HLTDebugRAW   HLTDebugFEVT                (with    DEBUG products)
+#   HLTScouting                               (with Scouting products)
 #
 # as these are used in Configuration/EventContent
 #
@@ -15,7 +16,17 @@ HLTriggerRAW  = cms.PSet(
         'keep FEDRawDataCollection_source_*_*',
         'keep GlobalObjectMapRecord_hltGtStage2ObjectMap_*_*',
         'keep edmTriggerResults_*_*_*',
-        'keep triggerTriggerEvent_*_*_*'
+        'keep triggerTriggerEvent_*_*_*',
+        'keep *_hltFEDSelectorL1_*_*',
+        'keep *_hltScoutingCaloPacker_*_*',
+        'keep *_hltScoutingEgammaPacker_*_*',
+        'keep *_hltScoutingMuonPackerCalo_*_*',
+        'keep *_hltScoutingMuonPacker_*_*',
+        'keep *_hltScoutingPFPacker_*_*',
+        'keep *_hltScoutingPrimaryVertexPackerCaloMuon_*_*',
+        'keep *_hltScoutingPrimaryVertexPacker_*_*',
+        'keep *_hltScoutingTrackPacker_*_*',
+        'keep edmTriggerResults_*_*_*'
     ) )
 )
 
@@ -24,7 +35,17 @@ HLTriggerRECO = cms.PSet(
         'drop *_hlt*_*_*',
         'keep GlobalObjectMapRecord_hltGtStage2ObjectMap_*_*',
         'keep edmTriggerResults_*_*_*',
-        'keep triggerTriggerEvent_*_*_*'
+        'keep triggerTriggerEvent_*_*_*',
+        'keep *_hltFEDSelectorL1_*_*',
+        'keep *_hltScoutingCaloPacker_*_*',
+        'keep *_hltScoutingEgammaPacker_*_*',
+        'keep *_hltScoutingMuonPackerCalo_*_*',
+        'keep *_hltScoutingMuonPacker_*_*',
+        'keep *_hltScoutingPFPacker_*_*',
+        'keep *_hltScoutingPrimaryVertexPackerCaloMuon_*_*',
+        'keep *_hltScoutingPrimaryVertexPacker_*_*',
+        'keep *_hltScoutingTrackPacker_*_*',
+        'keep edmTriggerResults_*_*_*'
     ) )
 )
 
@@ -33,7 +54,17 @@ HLTriggerAOD  = cms.PSet(
         'drop *_hlt*_*_*',
         'keep GlobalObjectMapRecord_hltGtStage2ObjectMap_*_*',
         'keep edmTriggerResults_*_*_*',
-        'keep triggerTriggerEvent_*_*_*'
+        'keep triggerTriggerEvent_*_*_*',
+        'keep *_hltFEDSelectorL1_*_*',
+        'keep *_hltScoutingCaloPacker_*_*',
+        'keep *_hltScoutingEgammaPacker_*_*',
+        'keep *_hltScoutingMuonPackerCalo_*_*',
+        'keep *_hltScoutingMuonPacker_*_*',
+        'keep *_hltScoutingPFPacker_*_*',
+        'keep *_hltScoutingPrimaryVertexPackerCaloMuon_*_*',
+        'keep *_hltScoutingPrimaryVertexPacker_*_*',
+        'keep *_hltScoutingTrackPacker_*_*',
+        'keep edmTriggerResults_*_*_*'
     ) )
 )
 
@@ -103,6 +134,12 @@ HLTDebugRAW   = cms.PSet(
         'keep *_hltCorrectedIslandEndcapSuperClustersHI_*_*',
         'keep *_hltCsc2DRecHits_*_*',
         'keep *_hltCscSegments_*_*',
+        'keep *_hltDeepBLifetimeTagInfosPF_*_*',
+        'keep *_hltDeepCombinedSecondaryVertexBJetTagsCalo_*_*',
+        'keep *_hltDeepCombinedSecondaryVertexBJetTagsInfosCalo_*_*',
+        'keep *_hltDeepCombinedSecondaryVertexBJetTagsInfos_*_*',
+        'keep *_hltDeepCombinedSecondaryVertexBJetTagsPF_*_*',
+        'keep *_hltDeepSecondaryVertexTagInfosPF_*_*',
         'keep *_hltDisplacedhltIter4PFlowTrackSelectionHighPurity_*_*',
         'keep *_hltDoublePFTau25TrackPt5MediumIsolationProng4L1HLTMatched_*_*',
         'keep *_hltDoublePFTau25TrackPt5MediumIsolationProng4_*_*',
@@ -128,6 +165,7 @@ HLTDebugRAW   = cms.PSet(
         'keep *_hltFastPVPixelTracks_*_*',
         'keep *_hltFastPVPixelVertices3D_*_*',
         'keep *_hltFastPVPixelVertices_*_*',
+        'keep *_hltFastPixelBLifetimeL3Associator_*_*',
         'keep *_hltFastPixelBLifetimeL3TagInfos_*_*',
         'keep *_hltFastPrimaryVertex_*_*',
         'keep *_hltFilterDoubleIsoPFTau45Trk5LeadTrack5IsolationL1HLTMatched_*_*',
@@ -136,6 +174,7 @@ HLTDebugRAW   = cms.PSet(
         'keep *_hltFilterSingleIsoPFTau35Trk20LeadTrackPt20_*_*',
         'keep *_hltFilterSingleIsoPFTau35Trk20MET60LeadTrack20IsolationL1HLTMatched_*_*',
         'keep *_hltFilterSingleIsoPFTau35Trk20MET70LeadTrack20IsolationL1HLTMatched_*_*',
+        'keep *_hltFullIterativeTrackingMergedForRefPP_*_*',
         'keep *_hltGmtStage2Digis_*_*',
         'keep *_hltGoodOnlinePVs_*_*',
         'keep *_hltGtStage2Digis_*_*',
@@ -153,6 +192,8 @@ HLTDebugRAW   = cms.PSet(
         'keep *_hltHiCorrectedIslandEndcapSuperClustersHI_*_*',
         'keep *_hltHiIslandSuperClustersHI_*_*',
         'keep *_hltHoreco_*_*',
+        'keep *_hltImpactParameterTagInfos_*_*',
+        'keep *_hltInclusiveSecondaryVertexFinderTagInfos_*_*',
         'keep *_hltIsolPixelTrackProdHB_*_*',
         'keep *_hltIsolPixelTrackProdHE_*_*',
         'keep *_hltIter0ElectronsTrackSelectionHighPurity_*_*',
@@ -163,12 +204,20 @@ HLTDebugRAW   = cms.PSet(
         'keep *_hltIter1PFlowTrackSelectionHighPurity_*_*',
         'keep *_hltIter2HighPtTkMuMerged_*_*',
         'keep *_hltIter2HighPtTkMuTrackSelectionHighPurity_*_*',
+        'keep *_hltIter2IterL3FromL1MuonMerged_*_*',
+        'keep *_hltIter2IterL3MuonMerged_*_*',
         'keep *_hltIter2MergedForBTag_*_*',
         'keep *_hltIter2MergedForElectrons_*_*',
         'keep *_hltIter2Merged_*_*',
         'keep *_hltIter2PFlowTrackSelectionHighPurity_*_*',
         'keep *_hltIter3Merged_*_*',
         'keep *_hltIter4Merged_*_*',
+        'keep *_hltIterL3GlbMuon_*_*',
+        'keep *_hltIterL3MuonAndMuonFromL1Merged_*_*',
+        'keep *_hltIterL3MuonMerged_*_*',
+        'keep *_hltIterL3MuonsNoID_*_*',
+        'keep *_hltIterL3Muons_*_*',
+        'keep *_hltIterL3OIMuonTrackSelectionHighPurity_*_*',
         'keep *_hltIterativeCone5PileupSubtractionCaloJets_*_*',
         'keep *_hltL1HLTSingleIsoPFTau35Trk20Met60JetsMatch_*_*',
         'keep *_hltL1IsoElectronTrackIsol_*_*',
@@ -214,6 +263,7 @@ HLTDebugRAW   = cms.PSet(
         'keep *_hltL3crIsoL1sMu16Eta2p1L1f0L2f16QL3f18QL3crIsoRhoFiltered0p15_*_*',
         'keep *_hltLeadingCentralJets30SingleTopEle27_*_*',
         'keep *_hltLeadingCentralJets30SingleTopIsoMu24_*_*',
+        'keep *_hltMergedTracksForBTag_*_*',
         'keep *_hltMergedTracks_*_*',
         'keep *_hltMet_*_*',
         'keep *_hltMu8Ele17CaloIdTCaloIsoVLPixelMatchFilter_*_*',
@@ -286,6 +336,7 @@ HLTDebugRAW   = cms.PSet(
         'keep *_hltSelector8CentralJetsL1FastJet_*_*',
         'keep *_hltSelectorJets20L1FastJet_*_*',
         'keep *_hltSiPixelCluster_*_*',
+        'keep *_hltSiPixelClustersCache_*_*',
         'keep *_hltSiPixelClusters_*_*',
         'keep *_hltSiStripClusters_*_*',
         'keep *_hltSiStripRawToClustersFacility_*_*',
@@ -349,7 +400,17 @@ HLTDebugRAW   = cms.PSet(
         'keep recoTracks_hltHIL3TkTracksFromL2_*_*',
         'keep triggerTriggerEventWithRefs_*_*_*',
         'keep triggerTriggerEvent_*_*_*',
-        'keep triggerTriggerFilterObjectWithRefs_*_*_*'
+        'keep triggerTriggerFilterObjectWithRefs_*_*_*',
+        'keep *_hltFEDSelectorL1_*_*',
+        'keep *_hltScoutingCaloPacker_*_*',
+        'keep *_hltScoutingEgammaPacker_*_*',
+        'keep *_hltScoutingMuonPackerCalo_*_*',
+        'keep *_hltScoutingMuonPacker_*_*',
+        'keep *_hltScoutingPFPacker_*_*',
+        'keep *_hltScoutingPrimaryVertexPackerCaloMuon_*_*',
+        'keep *_hltScoutingPrimaryVertexPacker_*_*',
+        'keep *_hltScoutingTrackPacker_*_*',
+        'keep edmTriggerResults_*_*_*'
     ) )
 )
 
@@ -419,6 +480,12 @@ HLTDebugFEVT  = cms.PSet(
         'keep *_hltCorrectedIslandEndcapSuperClustersHI_*_*',
         'keep *_hltCsc2DRecHits_*_*',
         'keep *_hltCscSegments_*_*',
+        'keep *_hltDeepBLifetimeTagInfosPF_*_*',
+        'keep *_hltDeepCombinedSecondaryVertexBJetTagsCalo_*_*',
+        'keep *_hltDeepCombinedSecondaryVertexBJetTagsInfosCalo_*_*',
+        'keep *_hltDeepCombinedSecondaryVertexBJetTagsInfos_*_*',
+        'keep *_hltDeepCombinedSecondaryVertexBJetTagsPF_*_*',
+        'keep *_hltDeepSecondaryVertexTagInfosPF_*_*',
         'keep *_hltDisplacedhltIter4PFlowTrackSelectionHighPurity_*_*',
         'keep *_hltDoublePFTau25TrackPt5MediumIsolationProng4L1HLTMatched_*_*',
         'keep *_hltDoublePFTau25TrackPt5MediumIsolationProng4_*_*',
@@ -444,6 +511,7 @@ HLTDebugFEVT  = cms.PSet(
         'keep *_hltFastPVPixelTracks_*_*',
         'keep *_hltFastPVPixelVertices3D_*_*',
         'keep *_hltFastPVPixelVertices_*_*',
+        'keep *_hltFastPixelBLifetimeL3Associator_*_*',
         'keep *_hltFastPixelBLifetimeL3TagInfos_*_*',
         'keep *_hltFastPrimaryVertex_*_*',
         'keep *_hltFilterDoubleIsoPFTau45Trk5LeadTrack5IsolationL1HLTMatched_*_*',
@@ -452,6 +520,7 @@ HLTDebugFEVT  = cms.PSet(
         'keep *_hltFilterSingleIsoPFTau35Trk20LeadTrackPt20_*_*',
         'keep *_hltFilterSingleIsoPFTau35Trk20MET60LeadTrack20IsolationL1HLTMatched_*_*',
         'keep *_hltFilterSingleIsoPFTau35Trk20MET70LeadTrack20IsolationL1HLTMatched_*_*',
+        'keep *_hltFullIterativeTrackingMergedForRefPP_*_*',
         'keep *_hltGmtStage2Digis_*_*',
         'keep *_hltGoodOnlinePVs_*_*',
         'keep *_hltGtStage2Digis_*_*',
@@ -469,6 +538,8 @@ HLTDebugFEVT  = cms.PSet(
         'keep *_hltHiCorrectedIslandEndcapSuperClustersHI_*_*',
         'keep *_hltHiIslandSuperClustersHI_*_*',
         'keep *_hltHoreco_*_*',
+        'keep *_hltImpactParameterTagInfos_*_*',
+        'keep *_hltInclusiveSecondaryVertexFinderTagInfos_*_*',
         'keep *_hltIsolPixelTrackProdHB_*_*',
         'keep *_hltIsolPixelTrackProdHE_*_*',
         'keep *_hltIter0ElectronsTrackSelectionHighPurity_*_*',
@@ -479,12 +550,20 @@ HLTDebugFEVT  = cms.PSet(
         'keep *_hltIter1PFlowTrackSelectionHighPurity_*_*',
         'keep *_hltIter2HighPtTkMuMerged_*_*',
         'keep *_hltIter2HighPtTkMuTrackSelectionHighPurity_*_*',
+        'keep *_hltIter2IterL3FromL1MuonMerged_*_*',
+        'keep *_hltIter2IterL3MuonMerged_*_*',
         'keep *_hltIter2MergedForBTag_*_*',
         'keep *_hltIter2MergedForElectrons_*_*',
         'keep *_hltIter2Merged_*_*',
         'keep *_hltIter2PFlowTrackSelectionHighPurity_*_*',
         'keep *_hltIter3Merged_*_*',
         'keep *_hltIter4Merged_*_*',
+        'keep *_hltIterL3GlbMuon_*_*',
+        'keep *_hltIterL3MuonAndMuonFromL1Merged_*_*',
+        'keep *_hltIterL3MuonMerged_*_*',
+        'keep *_hltIterL3MuonsNoID_*_*',
+        'keep *_hltIterL3Muons_*_*',
+        'keep *_hltIterL3OIMuonTrackSelectionHighPurity_*_*',
         'keep *_hltIterativeCone5PileupSubtractionCaloJets_*_*',
         'keep *_hltL1HLTSingleIsoPFTau35Trk20Met60JetsMatch_*_*',
         'keep *_hltL1IsoElectronTrackIsol_*_*',
@@ -530,6 +609,7 @@ HLTDebugFEVT  = cms.PSet(
         'keep *_hltL3crIsoL1sMu16Eta2p1L1f0L2f16QL3f18QL3crIsoRhoFiltered0p15_*_*',
         'keep *_hltLeadingCentralJets30SingleTopEle27_*_*',
         'keep *_hltLeadingCentralJets30SingleTopIsoMu24_*_*',
+        'keep *_hltMergedTracksForBTag_*_*',
         'keep *_hltMergedTracks_*_*',
         'keep *_hltMet_*_*',
         'keep *_hltMu8Ele17CaloIdTCaloIsoVLPixelMatchFilter_*_*',
@@ -602,6 +682,7 @@ HLTDebugFEVT  = cms.PSet(
         'keep *_hltSelector8CentralJetsL1FastJet_*_*',
         'keep *_hltSelectorJets20L1FastJet_*_*',
         'keep *_hltSiPixelCluster_*_*',
+        'keep *_hltSiPixelClustersCache_*_*',
         'keep *_hltSiPixelClusters_*_*',
         'keep *_hltSiStripClusters_*_*',
         'keep *_hltSiStripRawToClustersFacility_*_*',
@@ -665,7 +746,32 @@ HLTDebugFEVT  = cms.PSet(
         'keep recoTracks_hltHIL3TkTracksFromL2_*_*',
         'keep triggerTriggerEventWithRefs_*_*_*',
         'keep triggerTriggerEvent_*_*_*',
-        'keep triggerTriggerFilterObjectWithRefs_*_*_*'
+        'keep triggerTriggerFilterObjectWithRefs_*_*_*',
+        'keep *_hltFEDSelectorL1_*_*',
+        'keep *_hltScoutingCaloPacker_*_*',
+        'keep *_hltScoutingEgammaPacker_*_*',
+        'keep *_hltScoutingMuonPackerCalo_*_*',
+        'keep *_hltScoutingMuonPacker_*_*',
+        'keep *_hltScoutingPFPacker_*_*',
+        'keep *_hltScoutingPrimaryVertexPackerCaloMuon_*_*',
+        'keep *_hltScoutingPrimaryVertexPacker_*_*',
+        'keep *_hltScoutingTrackPacker_*_*',
+        'keep edmTriggerResults_*_*_*'
+    ) )
+)
+
+HLTScouting   = cms.PSet(
+    outputCommands = cms.vstring( *(
+        'keep *_hltFEDSelectorL1_*_*',
+        'keep *_hltScoutingCaloPacker_*_*',
+        'keep *_hltScoutingEgammaPacker_*_*',
+        'keep *_hltScoutingMuonPackerCalo_*_*',
+        'keep *_hltScoutingMuonPacker_*_*',
+        'keep *_hltScoutingPFPacker_*_*',
+        'keep *_hltScoutingPrimaryVertexPackerCaloMuon_*_*',
+        'keep *_hltScoutingPrimaryVertexPacker_*_*',
+        'keep *_hltScoutingTrackPacker_*_*',
+        'keep edmTriggerResults_*_*_*'
     ) )
 )
 

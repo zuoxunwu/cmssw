@@ -16,7 +16,7 @@ ALCARECOEcalPedestalsDigis.InputLabel = cms.InputTag('hltEcalCalibrationRaw')
 ALCARECOEcalPedestals = ecalpedestalPCL.clone()
 ALCARECOEcalPedestals.BarrelDigis = cms.InputTag('ALCARECOEcalPedestalsDigis', 'ebDigis')
 ALCARECOEcalPedestals.EndcapDigis = cms.InputTag('ALCARECOEcalPedestalsDigis', 'eeDigis')
-ALCARECOEcalPedestals.bstRecord   = cms.InputTag('ALCALRECOEcalTCDSDigis', 'bstRecord')
+ALCARECOEcalPedestals.tcdsRecord   = cms.InputTag('ALCALRECOEcalTCDSDigis', 'tcdsRecord')
 
 
 MEtoEDMConvertEcalPedestals = cms.EDProducer("MEtoEDMConverter",
@@ -27,7 +27,6 @@ MEtoEDMConvertEcalPedestals = cms.EDProducer("MEtoEDMConverter",
                                              # 2 provide more detailed output
                                              Frequency=cms.untracked.int32(50),
                                              MEPathToSave=cms.untracked.string('AlCaReco/EcalPedestalsPCL'),
-                                             deleteAfterCopy=cms.untracked.bool(True)
                                              )
 
 ALCALRECOEcalTCDSDigis = cms.EDProducer('TcdsRawToDigi')

@@ -1,4 +1,3 @@
-//#include "FWCore/PluginManager/interface/ModuleDef.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "FWCore/Framework/interface/ModuleFactory.h"
 #include "FWCore/Utilities/interface/typelookup.h"
@@ -16,7 +15,6 @@
 #include "GsfElectronFakeAnalyzer.h"
 #include "GsfElectronMCFakeAnalyzer.h"
 #include "PatPhotonSimpleAnalyzer.h"
-
 
 #include "CommonTools/UtilAlgos/interface/Merger.h"
 #include "DataFormats/EgammaReco/interface/SuperCluster.h"

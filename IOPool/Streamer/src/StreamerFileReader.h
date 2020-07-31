@@ -15,33 +15,37 @@ namespace edm {
   class ConfigurationDescriptions;
   class EventPrincipal;
   class EventSkipperByID;
+  class FileCatalogItem;
   struct InputSourceDescription;
   class ParameterSet;
   class StreamerInputFile;
   class StreamerFileReader : public StreamerInputSource {
   public:
     StreamerFileReader(ParameterSet const& pset, InputSourceDescription const& desc);
-    virtual ~StreamerFileReader();
+    ~StreamerFileReader() override;
 
-    InitMsgView const* getHeader();
-    EventMsgView const* getNextEvent();
-    bool newHeader();
     static void fillDescriptions(ConfigurationDescriptions& descriptions);
 
   private:
-    virtual bool checkNextEvent() override;
-    virtual void skip(int toSkip) override;
-    virtual void genuineCloseFile() override;
-    virtual void reset_() override;
+    InitMsgView const* getHeader();
+    EventMsgView const* getNextEvent();
+    bool newHeader();
 
-    std::shared_ptr<EventSkipperByID const> eventSkipperByID() const {return get_underlying_safe(eventSkipperByID_);}
-    std::shared_ptr<EventSkipperByID>& eventSkipperByID() {return get_underlying_safe(eventSkipperByID_);}
+    Next checkNext() override;
+    void skip(int toSkip) override;
+    void genuineReadFile() override;
+    void genuineCloseFile() override;
+    void reset_() override;
 
-    std::vector<std::string> streamerNames_; // names of Streamer files
+    std::shared_ptr<EventSkipperByID const> eventSkipperByID() const { return get_underlying_safe(eventSkipperByID_); }
+    std::shared_ptr<EventSkipperByID>& eventSkipperByID() { return get_underlying_safe(eventSkipperByID_); }
+
+    std::vector<FileCatalogItem> streamerNames_;  // names of Streamer files
     edm::propagate_const<std::unique_ptr<StreamerInputFile>> streamReader_;
     edm::propagate_const<std::shared_ptr<EventSkipperByID>> eventSkipperByID_;
     int initialNumberOfEventsToSkip_;
+    bool isFirstFile_ = true;
   };
-} //end-of-namespace-def
+}  // namespace edm
 
 #endif

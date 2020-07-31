@@ -1,3 +1,4 @@
+from __future__ import print_function
 # L1 Emulator DQM sequence
 #
 #   authors previous versions - see CVS
@@ -31,7 +32,6 @@ process.dqmEnv.subSystemFolder = 'L1TEMU'
 process.dqmSaver.tag = 'L1TEMU'
 #
 # no references needed
-# replace DQMStore.referenceFileName = "L1TEMU_reference.root"
 
 #
 # Condition for P5 cluster
@@ -176,7 +176,7 @@ process.l1GtHwValidation.DirName = cms.untracked.string("L1TEMU/Legacy/GTexpert"
 #
 # process.l1EmulatorEventInfoClient.verbose = cms.untracked.bool(True)
 
-print "Running with run type = ", process.runType.getRunType()
+print("Running with run type = ", process.runType.getRunType())
 process.castorDigis.InputLabel = cms.InputTag("rawDataCollector")
 process.csctfDigis.producer = cms.InputTag("rawDataCollector")
 process.dttfDigis.DTTF_FED_Source = cms.InputTag("rawDataCollector")

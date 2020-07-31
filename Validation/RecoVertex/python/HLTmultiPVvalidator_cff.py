@@ -24,9 +24,9 @@ vertexAssociatorByPositionAndTracks4pfMuonMergingTracks.trackAssociation = cms.I
 
 
 hltPixelPVanalysis = hltMultiPVanalysis.clone()
-hltMultiPVanalysis.do_generic_sim_plots  = True
-hltMultiPVanalysis.trackAssociatorMap    = cms.untracked.InputTag("tpToHLTpixelTrackAssociation")
-hltMultiPVanalysis.vertexAssociator      = cms.untracked.InputTag("vertexAssociatorByPositionAndTracks4pixelTracks")
+hltPixelPVanalysis.do_generic_sim_plots  = True
+hltPixelPVanalysis.trackAssociatorMap    = cms.untracked.InputTag("tpToHLTpixelTrackAssociation")
+hltPixelPVanalysis.vertexAssociator      = cms.untracked.InputTag("vertexAssociatorByPositionAndTracks4pixelTracks")
 hltPixelPVanalysis.vertexRecoCollections = cms.VInputTag(
     "hltPixelVertices",
     "hltTrimmedPixelVertices",
@@ -35,23 +35,23 @@ hltPixelPVanalysis.vertexRecoCollections = cms.VInputTag(
 
 
 hltPVanalysis = hltMultiPVanalysis.clone()
-hltMultiPVanalysis.trackAssociatorMap = cms.untracked.InputTag("tpToHLTpfMuonMergingTrackAssociation")
-hltMultiPVanalysis.vertexAssociator   = cms.untracked.InputTag("vertexAssociatorByPositionAndTracks4pfMuonMergingTracks")
+hltPVanalysis.trackAssociatorMap = cms.untracked.InputTag("tpToHLTpfMuonMergingTrackAssociation")
+hltPVanalysis.vertexAssociator   = cms.untracked.InputTag("vertexAssociatorByPositionAndTracks4pfMuonMergingTracks")
 hltPVanalysis.vertexRecoCollections   = cms.VInputTag(
     "hltVerticesPFFilter"
 #    "hltFastPVPixelVertices"
 )
 
-hltMultiPVAssociations = cms.Sequence(
-    hltTrackAssociatorByHits +
-    tpToHLTpixelTrackAssociation +
-    vertexAssociatorByPositionAndTracks4pixelTracks +
-    tpToHLTpfMuonMergingTrackAssociation +
+hltMultiPVAssociations = cms.Task(
+    hltTrackAssociatorByHits,
+    tpToHLTpixelTrackAssociation,
+    vertexAssociatorByPositionAndTracks4pixelTracks,
+    tpToHLTpfMuonMergingTrackAssociation,
     vertexAssociatorByPositionAndTracks4pfMuonMergingTracks
 )
 
 hltMultiPVValidation = cms.Sequence( 
-    hltMultiPVAssociations +
     hltPixelPVanalysis
-    + hltPVanalysis
+    + hltPVanalysis,
+    hltMultiPVAssociations
 )

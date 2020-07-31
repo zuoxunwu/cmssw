@@ -1,3 +1,4 @@
+from __future__ import print_function
 # L1 Trigger DQM sequence (L1T)
 #
 #   authors previous versions - see CVS
@@ -28,7 +29,6 @@ process.dqmSaver.tag = 'L1T'
 
 #
 # references needed
-process.DQMStore.referenceFileName = "/dqmdata/dqm/reference/l1t_reference.root"
 
 # Condition for P5 cluster
 process.load("DQM.Integration.config.FrontierCondition_GT_cfi")
@@ -162,7 +162,7 @@ process.schedule.remove(process.l1tSyncPath)
 # Heavy Ion Specific Fed Raw Data Collection Label
 #--------------------------------------------------
 
-print "Running with run type = ", process.runType.getRunType()
+print("Running with run type = ", process.runType.getRunType())
 process.castorDigis.InputLabel = cms.InputTag("rawDataCollector")
 process.csctfDigis.producer = cms.InputTag("rawDataCollector")
 process.dttfDigis.DTTF_FED_Source = cms.InputTag("rawDataCollector")

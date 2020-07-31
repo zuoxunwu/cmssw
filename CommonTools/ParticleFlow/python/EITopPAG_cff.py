@@ -1,5 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 
+from CommonTools.ParticleFlow.goodOfflinePrimaryVertices_cfi import *
 from CommonTools.ParticleFlow.pfMET_cfi  import *
 from CommonTools.ParticleFlow.pfJets_cff import *
 from CommonTools.ParticleFlow.pfTaus_cff import *
@@ -19,6 +20,7 @@ from CommonTools.ParticleFlow.TopProjectors.pfNoTau_cfi import *
 # b-tagging
 from RecoBTag.ImpactParameter.pfImpactParameterTagInfos_cfi import pfImpactParameterTagInfos
 from RecoBTag.SecondaryVertex.pfInclusiveSecondaryVertexFinderTagInfos_cfi import pfInclusiveSecondaryVertexFinderTagInfos
+from RecoBTag.SecondaryVertex.candidateCombinedSecondaryVertexV2Computer_cfi import candidateCombinedSecondaryVertexV2Computer
 from RecoBTag.SecondaryVertex.pfCombinedInclusiveSecondaryVertexV2BJetTags_cfi import pfCombinedInclusiveSecondaryVertexV2BJetTags
 
 
@@ -147,10 +149,11 @@ pfCombinedInclusiveSecondaryVertexV2BJetTagsEI = pfCombinedInclusiveSecondaryVer
 
 
 #### MET ####
-pfMetEI = pfMET.clone(jets=cms.InputTag("pfJetsEI"))
+pfMetEI = pfMET.clone(srcJets=cms.InputTag("pfJetsEI"))
 
 #EITopPAG = cms.Sequence(
 EIsequence = cms.Sequence(
+    goodOfflinePrimaryVertices +
     pfPileUpEI +
     pfPileUpJMEEI +
     pfNoPileUpEI +

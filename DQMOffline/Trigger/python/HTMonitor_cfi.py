@@ -4,6 +4,11 @@ from DQMOffline.Trigger.htMonitoring_cfi import htMonitoring
 
 hltHTmonitoring = htMonitoring.clone()
 hltHTmonitoring.FolderName = cms.string('HLT/HT/PFMETNoMu120/')
+hltHTmonitoring.histoPSet.lsPSet = cms.PSet(
+  nbins = cms.uint32(  250 ),
+  xmin  = cms.double(    0.),
+  xmax  = cms.double( 2500.),
+)
 hltHTmonitoring.histoPSet.htPSet = cms.PSet(
   nbins = cms.uint32 (  200  ),
   xmin  = cms.double(   -0.5),
@@ -29,4 +34,4 @@ hltHTmonitoring.denGenericTriggerEventPSet.dcsPartitions = cms.vint32 ( 24, 25, 
 hltHTmonitoring.denGenericTriggerEventPSet.andOrDcs      = cms.bool( False )
 hltHTmonitoring.denGenericTriggerEventPSet.errorReplyDcs = cms.bool( True )
 hltHTmonitoring.denGenericTriggerEventPSet.verbosityLevel = cms.uint32(0)
-hltHTmonitoring.denGenericTriggerEventPSet.hltPaths      = cms.vstring("HLT_IsoMu27_v*","HLT_IsoTkMu27_v*");
+hltHTmonitoring.denGenericTriggerEventPSet.hltPaths      = cms.vstring("HLT_IsoMu27_v*")

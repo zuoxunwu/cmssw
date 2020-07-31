@@ -15,6 +15,8 @@ import logging
 
 import sqlalchemy
 import sqlalchemy.ext.declarative
+import enum
+from sqlalchemy import Enum
 
 authPathEnvVar = 'COND_AUTH_PATH'
 schema_name = 'CMS_CONDITIONS'
@@ -43,44 +45,9 @@ ONLINEORAINT = 'cmsintr_lb'
 if logger.level == logging.NOTSET:
     logger.setLevel(logging.WARN)
 
-
-class EnumMetaclass(type):
-    def __init__(cls, name, bases, dct):
-        cls._members = sorted([member for member in dir(cls) if not member.startswith('_')])
-        cls._map = dict([(member, getattr(cls, member)) for member in cls._members])
-        cls._reversemap = dict([(value, key) for (key, value) in cls._map.items()])
-        super(EnumMetaclass, cls).__init__(name, bases, dct)
-
-    def __len__(cls):
-        return len(cls._members)
-
-    def __getitem__(cls, key):
-        '''Returns the value for this key (if the key is an integer,
-        the value is the nth member from the sorted members list).
-        '''
-
-        if isinstance(key, int):
-            # for tuple() and list()
-            key = cls._members[key]
-        return cls._map[key]
-
-    def __call__(cls, value):
-        '''Returns the key for this value.
-        '''
-
-        return cls._reversemap[value]
-
-
-class Enum(object):
-    '''A la PEP 435, simplified.
-    '''
-
-    __metaclass__ = EnumMetaclass
-
-
 # Utility functions
 def hash(data):
-    return hashlib.sha1(data).hexdigest()
+    return hashlib.sha1(data.encode('ascii')).hexdigest()
 
 
 # Constants
@@ -166,7 +133,7 @@ database_help = '''
       /absolute/path/to/file.db  ===  sqlite:////absolute/path/to/file.db
 '''
 
-class Synchronization(Enum):
+class Synchronization(enum.Enum):
     any        = 'any'
     validation = 'validation'
     mc         = 'mc'
@@ -177,12 +144,12 @@ class Synchronization(Enum):
     pcl        = 'pcl'
     offline    = 'offline'
 
-class TimeType(Enum):
-    run  = 'Run'
-    time = 'Time'
-    lumi = 'Lumi'
-    hash = 'Hash'
-    user = 'User'
+class TimeType(enum.Enum):
+    Run  = 'Run'
+    Time = 'Time'
+    Lumi = 'Lumi'
+    Hash = 'Hash'
+    User = 'User'
 
 
 # Schema definition
@@ -240,7 +207,7 @@ def make_dbtype( backendName, schemaName, baseType ):
                 nullable = (True if v[1]==_Col.nullable else False)
                 members[k] = sqlalchemy.Column(v[0],nullable=nullable)
     dbType = type(dbtype_name,(_Base,),members)
-    
+
     if backendName not in db_models.keys():
         db_models[backendName] = {}
     db_models[backendName][baseType.__name__] = dbType
@@ -254,9 +221,9 @@ def getSchema(tp):
 class Tag:
     __tablename__       = 'TAG'
     columns             = { 'name': (sqlalchemy.String(name_length),_Col.pk), 
-                            'time_type': (sqlalchemy.Enum(*tuple(TimeType)),_Col.notNull),
+                            'time_type': (sqlalchemy.Enum(*tuple(TimeType.__members__.keys())),_Col.notNull),
                             'object_type': (sqlalchemy.String(name_length),_Col.notNull),
-                            'synchronization': (sqlalchemy.Enum(*tuple(Synchronization)),_Col.notNull),
+                            'synchronization': (sqlalchemy.Enum(*tuple(Synchronization.__members__.keys())),_Col.notNull),
                             'description': (sqlalchemy.String(description_length),_Col.notNull),
                             'last_validated_time':(sqlalchemy.BIGINT,_Col.notNull),
                             'end_of_validity':(sqlalchemy.BIGINT,_Col.notNull),
@@ -267,6 +234,7 @@ class TagMetadata:
     __tablename__       = 'TAG_METADATA'
     columns             = { 'tag_name': (DbRef(Tag,'name'),_Col.pk), 
                             'min_serialization_v': (sqlalchemy.String(20),_Col.notNull),
+                            'min_since': (sqlalchemy.BIGINT,_Col.notNull),
                             'modification_time':(sqlalchemy.TIMESTAMP,_Col.notNull) }
 
 class Payload:
@@ -484,7 +452,12 @@ def _getCMSFrontierConnectionString(database):
 def _getCMSSQLAlchemyConnectionString(technology,service,schema_name):
     if technology == 'frontier':
         import urllib
-        return '%s://@%s/%s' % ('oracle+frontier', urllib.quote_plus(_getCMSFrontierConnectionString(service)), schema_name )
+        import sys
+        py3k = sys.version_info >= (3, 0)        
+        if py3k:
+            return '%s://@%s/%s' % ('oracle+frontier', urllib.parse.quote_plus(_getCMSFrontierConnectionString(service)), schema_name )
+        else:
+            return '%s://@%s/%s' % ('oracle+frontier', urllib.quote_plus(_getCMSFrontierConnectionString(service)), schema_name )
     elif technology == 'oracle':
         return '%s://%s@%s' % (technology, schema_name, service)
 
@@ -591,7 +564,7 @@ def _exists(session, primary_key, value):
     ret = None
     try: 
         ret = session.query(primary_key).\
-    	    filter(primary_key == value).\
+            filter(primary_key == value).\
             count() != 0
     except sqlalchemy.exc.OperationalError:
         pass
@@ -618,10 +591,10 @@ def listObject(session, name, snapshot=None):
     if is_tag:
         result['type'] = 'Tag'
         result['name'] = session.query(Tag).get(name).name
-	result['timeType'] = session.query(Tag.time_type).\
-				     filter(Tag.name == name).\
-            			     scalar()
-    
+        result['timeType'] = session.query(Tag.time_type).\
+                                     filter(Tag.name == name).\
+                                     scalar()
+
         result['iovs'] = session.query(IOV.since, IOV.insertion_time, IOV.payload_hash, Payload.object_type).\
                 join(IOV.payload).\
                 filter(
@@ -637,11 +610,11 @@ def listObject(session, name, snapshot=None):
         is_global_tag = _exists(session, GlobalTag.name, name)
         if is_global_tag:
             result['type'] = 'GlobalTag'
-	    result['name'] = session.query(GlobalTag).get(name)
+            result['name'] = session.query(GlobalTag).get(name)
             result['tags'] = session.query(GlobalTagMap.record, GlobalTagMap.label, GlobalTagMap.tag_name).\
                                      filter(GlobalTagMap.global_tag_name == name).\
-                    		     order_by(GlobalTagMap.record, GlobalTagMap.label).\
-                    		     all()
+                                     order_by(GlobalTagMap.record, GlobalTagMap.label).\
+                                     all()
     except sqlalchemy.exc.OperationalError:
         sys.stderr.write("No table for GlobalTags found in DB.\n\n")
 

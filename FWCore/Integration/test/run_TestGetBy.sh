@@ -36,6 +36,18 @@ pushd ${LOCAL_TMP_DIR}
   echo "testGetByMerge"
   cmsRun -p ${LOCAL_TEST_DIR}/${test}Merge_cfg.py > testGetByMerge.log 2>/dev/null || die "cmsRun ${test}Merge_cfg.py" $?
 
+  echo "testGetByPlaceholder"
+  cmsRun -p ${LOCAL_TEST_DIR}/${test}Placeholder_cfg.py || die "cmsRun ${test}Placeholder_cfg.py" $?
+
+  echo "testProducesCollector"
+  cmsRun -p ${LOCAL_TEST_DIR}/testProducesCollector_cfg.py || die "cmsRun testProducesCollector_cfg.py" $?
+
+  echo "testGetByRunsMode_cfg.py"
+  cmsRun -p ${LOCAL_TEST_DIR}/testGetByRunsMode_cfg.py || die "cmsRun testGetByRunsMode_cfg.py" $?
+
+  echo "testGetByRunsLumisMode_cfg.py"
+  cmsRun -p ${LOCAL_TEST_DIR}/testGetByRunsLumisMode_cfg.py || die "cmsRun testGetByRunsLumisMode_cfg.py" $?
+
 popd
 
 exit 0

@@ -7,7 +7,7 @@
  *
  * \author Vladimir Ivanchenko
  * $Date: 20-Jan-2015
- */ 
+ */
 
 #include "G4VPreCompoundModel.hh"
 #include "G4ReactionProductVector.hh"
@@ -17,19 +17,16 @@ class G4HadFinalState;
 class G4HadProjectile;
 class G4Nucleus;
 
-class CMSDummyDeexcitation : public G4VPreCompoundModel
-{ 
+class CMSDummyDeexcitation : public G4VPreCompoundModel {
 public:
+  CMSDummyDeexcitation() : G4VPreCompoundModel(nullptr, "PRECO"){};
 
-  CMSDummyDeexcitation():G4VPreCompoundModel(0, "PRECO") {}; 
+  ~CMSDummyDeexcitation() override{};
 
-  virtual ~CMSDummyDeexcitation() {};
+  G4HadFinalState* ApplyYourself(const G4HadProjectile&, G4Nucleus&) override { return nullptr; }
 
-  virtual G4HadFinalState* ApplyYourself(const G4HadProjectile&, G4Nucleus&) { return 0; } 
+  G4ReactionProductVector* DeExcite(G4Fragment&) override { return new G4ReactionProductVector(); };
 
-  virtual G4ReactionProductVector* DeExcite(G4Fragment&) { return new G4ReactionProductVector(); };
-
-  virtual void DeExciteModelDescription(std::ostream&) const {}
-
+  void DeExciteModelDescription(std::ostream&) const override {}
 };
 #endif

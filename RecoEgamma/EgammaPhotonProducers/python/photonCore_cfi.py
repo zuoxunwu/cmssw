@@ -20,3 +20,12 @@ photonCoreFromMultiCl = photonCore.clone(
     scIslandEndcapProducer = 'particleFlowSuperClusterHGCalFromMultiCl',
     pixelSeedProducer = 'electronMergedSeedsFromMultiCl'
 )
+
+islandPhotonCore = photonCore.clone(
+    scHybridBarrelProducer = "correctedIslandBarrelSuperClusters",
+    scIslandEndcapProducer = "correctedIslandEndcapSuperClusters",
+    minSCEt = 8.0
+)
+from Configuration.ProcessModifiers.egamma_lowPt_exclusive_cff import egamma_lowPt_exclusive
+egamma_lowPt_exclusive.toModify(photonCore,minSCEt=0) #
+egamma_lowPt_exclusive.toModify(islandPhotonCore,minSCEt = 1.0) #default 8

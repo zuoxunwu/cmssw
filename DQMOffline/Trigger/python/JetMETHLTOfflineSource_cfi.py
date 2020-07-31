@@ -1,8 +1,9 @@
 import FWCore.ParameterSet.Config as cms
 
-jetMETHLTOfflineSourceAK4 = cms.EDAnalyzer(
+from DQMServices.Core.DQMEDAnalyzer import DQMEDAnalyzer
+jetMETHLTOfflineSourceAK4 = DQMEDAnalyzer(
     "JetMETHLTOfflineSource",
-    dirname = cms.untracked.string("HLT/JetMET"),
+    dirname = cms.untracked.string("HLT/JME/Jets/AK4"),
     #
     processname = cms.string("HLT"),
     triggerSummaryLabel = cms.InputTag("hltTriggerSummaryAOD","","HLT"),
@@ -100,9 +101,9 @@ jetMETHLTOfflineSourceAK4 = cms.EDAnalyzer(
 
 
 jetMETHLTOfflineSourceAK8 = jetMETHLTOfflineSourceAK4.clone(
-    dirname = cms.untracked.string('HLT/JetMET/AK8'),
+    dirname = cms.untracked.string('HLT/JME/Jets/AK8'),
     #    CaloJetCollectionLabel = cms.InputTag("ak4CaloJets"), #ak8 not available in RECO anymore, so keep ak4...
-    #    PFJetCollectionLabel   = cms.InputTag("ak8PFJetsCHS"), # does not work in all matrix tests, yet
+    #    PFJetCollectionLabel   = cms.InputTag("ak8PFJetsPuppi"), # does not work in all matrix tests, yet
     #    PFJetCorLabel        = cms.InputTag("ak8PFCHSL1FastjetL2L3ResidualCorrector"), # does not work in all matrix tests, yet 
     PFJetCollectionLabel   = cms.InputTag("ak4PFJets"),
     PFJetCorLabel        = cms.InputTag("ak4PFL1FastL2L3ResidualCorrector"), #dummy residual corrections now also provided for MC GTs
@@ -150,7 +151,7 @@ jetMETHLTOfflineSourceAK8 = jetMETHLTOfflineSourceAK4.clone(
 )
 
 jetMETHLTOfflineSourceAK8Fwd = jetMETHLTOfflineSourceAK4.clone(
-    dirname = cms.untracked.string('HLT/JetMET/AK8Fwd'),
+    dirname = cms.untracked.string('HLT/JME/Jets/AK8Fwd'),
     PFJetCollectionLabel   = cms.InputTag("ak4PFJets"),
     PFJetCorLabel        = cms.InputTag("ak4PFL1FastL2L3ResidualCorrector"), #dummy residual corrections now also provided for MC GTs
 
@@ -196,7 +197,7 @@ jetMETHLTOfflineSourceAK8Fwd = jetMETHLTOfflineSourceAK4.clone(
 )
 
 jetMETHLTOfflineSourceAK4Fwd = jetMETHLTOfflineSourceAK4.clone(
-    dirname = cms.untracked.string('HLT/JetMET/AK4Fwd'),
+    dirname = cms.untracked.string('HLT/JME/Jets/AK4Fwd'),
     PFJetCollectionLabel   = cms.InputTag("ak4PFJets"),
     PFJetCorLabel        = cms.InputTag("ak4PFL1FastL2L3ResidualCorrector"), #dummy residual corrections now also provided for MC GTs
 

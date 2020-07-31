@@ -5,7 +5,7 @@
 //
 // Package:    GamIsoDetIdCollectionProducer
 // Class:      GamIsoDetIdCollectionProducer
-// 
+//
 /**\class GamIsoDetIdCollectionProducer 
 Original author: Matthew LeBourgeois PH/CMG
 Modified from :
@@ -15,8 +15,6 @@ by Paolo Meridiani PH/CMG
 Implementation:
  <Notes on implementation>
 */
-
-
 
 // system include files
 #include <memory>
@@ -33,37 +31,41 @@ Implementation:
 #include "RecoLocalCalo/EcalRecAlgos/interface/EcalSeverityLevelAlgo.h"
 #include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
 #include "DataFormats/EgammaCandidates/interface/PhotonFwd.h"
+#include "RecoLocalCalo/EcalRecAlgos/interface/EcalSeverityLevelAlgo.h"
+#include "RecoLocalCalo/EcalRecAlgos/interface/EcalSeverityLevelAlgoRcd.h"
+#include "Geometry/Records/interface/CaloGeometryRecord.h"
+#include "Geometry/CaloGeometry/interface/CaloGeometry.h"
 
 class CaloTopology;
 
 class GamIsoDetIdCollectionProducer : public edm::stream::EDProducer<> {
-   public:
-      //! ctor
-      explicit GamIsoDetIdCollectionProducer(const edm::ParameterSet&);
-      ~GamIsoDetIdCollectionProducer();
-      void beginJob ();
-      //! producer
-      virtual void produce(edm::Event &, const edm::EventSetup&);
+public:
+  //! ctor
+  explicit GamIsoDetIdCollectionProducer(const edm::ParameterSet &);
+  ~GamIsoDetIdCollectionProducer() override;
+  void beginJob();
+  //! producer
+  void produce(edm::Event &, const edm::EventSetup &) override;
 
-   private:
-      // ----------member data ---------------------------
-      edm::EDGetTokenT<EcalRecHitCollection> recHitsToken_;
-      edm::EDGetTokenT<reco::PhotonCollection> emObjectToken_;
-      edm::InputTag recHitsLabel_;
-      edm::InputTag emObjectLabel_;
-      double energyCut_;
-      double etCut_;
-      double etCandCut_;
-      double outerRadius_;
-      double innerRadius_;
-      std::string interestingDetIdCollection_;
+private:
+  // ----------member data ---------------------------
+  edm::EDGetTokenT<EcalRecHitCollection> recHitsToken_;
+  edm::EDGetTokenT<reco::PhotonCollection> emObjectToken_;
+  edm::ESGetToken<CaloGeometry, CaloGeometryRecord> caloGeometryToken_;
+  edm::ESGetToken<EcalSeverityLevelAlgo, EcalSeverityLevelAlgoRcd> sevLvToken_;
+  edm::InputTag recHitsLabel_;
+  edm::InputTag emObjectLabel_;
+  double energyCut_;
+  double etCut_;
+  double etCandCut_;
+  double outerRadius_;
+  double innerRadius_;
+  std::string interestingDetIdCollection_;
 
-      std::vector<int> severitiesexclEB_;
-      std::vector<int> severitiesexclEE_;
-      std::vector<int> flagsexclEB_;
-      std::vector<int> flagsexclEE_;
+  std::vector<int> severitiesexclEB_;
+  std::vector<int> severitiesexclEE_;
+  std::vector<int> flagsexclEB_;
+  std::vector<int> flagsexclEE_;
 };
 
 #endif
-
-

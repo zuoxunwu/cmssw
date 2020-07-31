@@ -19,7 +19,7 @@
 class EcalIsolatedParticleCandidateProducer : public edm::global::EDProducer<> {
 public:
   explicit EcalIsolatedParticleCandidateProducer(const edm::ParameterSet&);
-  ~EcalIsolatedParticleCandidateProducer();
+  ~EcalIsolatedParticleCandidateProducer() override;
 
 private:
   void produce(edm::StreamID, edm::Event&, const edm::EventSetup&) const override;
@@ -35,7 +35,7 @@ private:
   edm::EDGetTokenT<trigger::TriggerFilterObjectWithRefs> tok_hlt_;
   edm::EDGetTokenT<EcalRecHitCollection> tok_EB_;
   edm::EDGetTokenT<EcalRecHitCollection> tok_EE_;
-      
+
   // ----------member data ---------------------------
 };
 

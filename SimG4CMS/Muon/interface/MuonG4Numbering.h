@@ -20,20 +20,16 @@
 
 class G4Step;
 class MuonBaseNumber;
-class DDCompactView;
-class MuonDDDConstants;
+class MuonGeometryConstants;
 
 class MuonG4Numbering {
- public:
-
-  MuonG4Numbering(const DDCompactView& cpv);
-  MuonG4Numbering(const MuonDDDConstants& muonConstants);
+public:
+  MuonG4Numbering(const MuonGeometryConstants& muonConstants);
   ~MuonG4Numbering(){};
-  
-  MuonBaseNumber PhysicalVolumeToBaseNumber(const G4Step* aStep);
-  
- private:
 
+  MuonBaseNumber PhysicalVolumeToBaseNumber(const G4Step* aStep);
+
+private:
   const int getCopyNoLevel(const int);
   const int getCopyNoSuperNo(const int);
   const int getCopyNoBaseNo(const int);
@@ -43,7 +39,6 @@ class MuonG4Numbering {
   int theSuperPart;
   int theBasePart;
   int theStartCopyNo;
-
 };
 
 #endif
