@@ -84,6 +84,18 @@ private:
   MonitorElement* rpcChamberTheta[12];
 
   MonitorElement* rpcHitTimingInTrack;
+
+  // Add GEMs Oct 27 2020
+  MonitorElement* hitType;
+  MonitorElement* hitTypeBX;
+  MonitorElement* hitTypeSector;
+  MonitorElement* gemHitBX;
+  MonitorElement* gemHitOccupancy;
+  MonitorElement* gemHitTiming[5];
+  MonitorElement* gemHitTimingFrac[5];
+  MonitorElement* gemHitTimingTot;
+  MonitorElement* gemChamberPad[2];
+  MonitorElement* gemChamberPartition[2];
 };
 
 #endif

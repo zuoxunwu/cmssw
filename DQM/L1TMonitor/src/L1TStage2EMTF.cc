@@ -118,6 +118,56 @@ void L1TStage2EMTF::bookHistograms(DQMStore::IBooker& ibooker, const edm::Run&, 
   }
   rpcHitOccupancy->getTH2F()->GetXaxis()->SetCanExtend(false);  // Needed to stop multi-thread summing
 
+  // GEM Monitor Elements // Add GEM Oct 27 2020
+  // test plots Nov 01 2020
+  hitType = ibooker.book1D("hitType", "Hit Type", 4, 0.5,4.5);
+  hitType->setBinLabel(1, "CSC", 1);
+  hitType->setBinLabel(2, "RPC", 1);
+  hitType->setBinLabel(3, "GEM", 1);
+  hitType->setBinLabel(4, "Tot", 1);
+
+  hitTypeBX = ibooker.book2D("hitTypeBX", "Hit Type BX", 4, 0.5, 4.5, 7, -3, 4);
+  hitTypeBX->setBinLabel(1, "CSC", 1);
+  hitTypeBX->setBinLabel(2, "RPC", 1);
+  hitTypeBX->setBinLabel(3, "GEM", 1);
+  hitTypeBX->setBinLabel(4, "Tot", 1);
+  for (int ybin = 1; ybin < 8; ybin++ ) hitTypeBX->setBinLabel(ybin, std::to_string(ybin-4), 2);
+
+  hitTypeSector = ibooker.book2D("hitTypeSector", "Hit Type Sector", 4, 0.5, 4.5, 6, 1, 7);
+  hitTypeSector->setBinLabel(1, "CSC", 1);
+  hitTypeSector->setBinLabel(2, "RPC", 1);
+  hitTypeSector->setBinLabel(3, "GEM", 1);
+  hitTypeSector->setBinLabel(4, "Tot", 1);
+  for (int ybin = 1; ybin < 7; ybin++ ) hitTypeSector->setBinLabel(ybin, std::to_string(ybin), 2);
+
+  gemHitBX = ibooker.book2D("gemHitBX", "GEM Hit BX", 7, -3, 4, 2, 0, 2);
+  gemHitBX->setAxisTitle("BX", 1);
+  for (int xbin = 1, xbin_label = -3; xbin <= 7; ++xbin, ++xbin_label) {
+    gemHitBX->setBinLabel(xbin, std::to_string(xbin_label), 1);
+  }
+  gemHitBX->setBinLabel(1, "GE-1/1", 2);
+  gemHitBX->setBinLabel(2, "GE+1/1", 2);
+
+  gemHitOccupancy = ibooker.book2D("gemHitOccupancy", "GEM Chamber Occupancy", 42, 1, 43, 2, 0, 2);
+  gemHitOccupancy->setAxisTitle("10#circ Chambers (N=neighbor)", 1);
+  count = 0;
+  for (int xbin = 1; xbin < 43; ++xbin) {
+    gemHitOccupancy->setBinLabel(xbin, std::to_string(xbin - count), 1);
+    if (xbin == 2 || xbin == 9 || xbin == 16 || xbin == 23 || xbin == 30 || xbin == 37) {
+      ++xbin;
+      ++count;
+      gemHitOccupancy->setBinLabel(xbin, "N", 1);
+    }
+  }  
+
+//  for (int bin = 1; bin < 7; ++bin) {
+//    gemHitOccupancy->setBinLabel(bin * 7 -6, std::to_string(bin), 1);
+//    gemHitOccupancy->setBinLabel(bin * 7 , "N", 1);
+//  }
+  gemHitOccupancy->setBinLabel(1, "GE-1/1", 2);
+  gemHitOccupancy->setBinLabel(2, "GE+1/1", 2);
+  gemHitOccupancy->getTH2F()->GetXaxis()->SetCanExtend(false); // Needed to stop multi-thread summing
+
   // Track Monitor Elements
   emtfnTracks = ibooker.book1D("emtfnTracks", "Number of EMTF Tracks per Event", 11, 0, 11);
   for (int xbin = 1; xbin <= 10; ++xbin) {
@@ -301,6 +351,31 @@ void L1TStage2EMTF::bookHistograms(DQMStore::IBooker& ibooker, const edm::Run&, 
     }
   }
 
+  // GEM Input Nov 03 2020
+  ibooker.setCurrentFolder(monitorDir + "/GEMInput");
+  for (int hist = 0; hist < 2; hist++) {
+    if (hist == 0) {
+      name = "GENeg11";
+      label = "GE-1/1";
+    }
+    if (hist == 1) {
+      name = "GEPos11";
+      label = "GE+1/1";
+    }
+    nChambs = 36;
+    nStrips = 192; //use nStrips for number of pads
+    gemChamberPad[hist] = ibooker.book2D("gemChamberPad" + name, "GEM Chamber Pad " + label, nChambs, 1, 1 + nChambs, nStrips, 0, nStrips);
+    gemChamberPad[hist]->setAxisTitle("Chamber, " + label, 1);
+    gemChamberPad[hist]->setAxisTitle("Pad", 2);
+    gemChamberPartition[hist] = ibooker.book2D("gemChamberPartition" + name, "GEM Chamber Partition " + label, nChambs, 1, 1 + nChambs, 8, 0, 8);
+    gemChamberPartition[hist]->setAxisTitle("Chamber, " + label, 1);
+    gemChamberPartition[hist]->setAxisTitle("Partition", 2);
+    for (int bin = 1; bin <= nChambs; ++bin) {
+      gemChamberPad[hist]->setBinLabel(bin, std::to_string(bin), 1);
+      gemChamberPartition[hist]->setBinLabel(bin, std::to_string(bin), 1);
+    }
+  }
+
   // CSC LCT and RPC Hit Timing
   ibooker.setCurrentFolder(monitorDir + "/Timing");
 
@@ -309,6 +384,9 @@ void L1TStage2EMTF::bookHistograms(DQMStore::IBooker& ibooker, const edm::Run&, 
 
   rpcHitTimingTot = ibooker.book2D("rpcHitTimingTot", "RPC Chamber Occupancy ", 42, 1, 43, 12, 0, 12);
   rpcHitTimingTot->setAxisTitle("Sector (N=neighbor)", 1);
+
+  gemHitTimingTot = ibooker.book2D("gemHitTimingTot", "GEM Chamber Occupancy ", 42, 1, 43, 2, 0, 2);  // Add GEM Timing Oct 27 2020
+  gemHitTimingTot->setAxisTitle("10#circ Chamber (N=neighbor)", 1);
   const std::array<std::string, 5> nameBX{{"BXNeg1", "BXPos1", "BXNeg2", "BXPos2", "BX0"}};
   const std::array<std::string, 5> labelBX{{"BX -1", "BX +1", "BX -2", "BX +2", "BX 0"}};
 
@@ -364,6 +442,33 @@ void L1TStage2EMTF::bookHistograms(DQMStore::IBooker& ibooker, const edm::Run&, 
     }
     //if (hist == 4) continue; // Don't book for BX = 0
 
+    gemHitTiming[hist] =
+        ibooker.book2D("gemHitTiming" + nameBX[hist], "GEM Chamber Occupancy " + labelBX[hist], 42, 1, 43, 2, 0, 2);
+    gemHitTiming[hist]->setAxisTitle("10#circ Chamber", 1);
+    count = 0;
+    for (int xbin = 1; xbin < 43; ++xbin) {
+      gemHitTiming[hist]->setBinLabel(xbin, std::to_string(xbin - count), 1);
+      if (hist == 0)
+        gemHitTimingTot->setBinLabel(xbin, std::to_string(xbin - count), 1);  //only fill once in the loop
+      if (xbin == 2 || xbin == 9 || xbin == 16 || xbin == 23 || xbin == 30 || xbin == 37) {
+        ++xbin;
+        ++count;
+        gemHitTiming[hist]->setBinLabel(xbin, "N", 1);
+        if (hist == 0)
+          gemHitTimingTot->setBinLabel(xbin, "N", 1);
+      }
+    }
+
+    gemHitTiming[hist]->setBinLabel(1, "GE-1/1", 2);
+    gemHitTiming[hist]->setBinLabel(2, "GE+1/1", 2);
+    if (hist == 0) {
+      gemHitTimingTot->setBinLabel(1, "GE-1/1", 2);
+      gemHitTimingTot->setBinLabel(2, "GE+1/1", 2);
+      gemHitTimingTot->getTH2F()->GetXaxis()->SetCanExtend(false);      // Needed to stop multi-thread summing
+    }
+    gemHitTiming[hist]->getTH2F()->GetXaxis()->SetCanExtend(false);  // Needed to stop multi-thread summing
+
+
     count = 0;
     cscLCTTimingFrac[hist] = ibooker.book2D(
         "cscLCTTimingFrac" + nameBX[hist], "CSC Chamber Occupancy " + labelBX[hist], 42, 1, 43, 20, 0, 20);
@@ -391,6 +496,22 @@ void L1TStage2EMTF::bookHistograms(DQMStore::IBooker& ibooker, const edm::Run&, 
       rpcHitTimingFrac[hist]->setBinLabel(bin, "RE-" + rpc_label[bin - 1], 2);
       rpcHitTimingFrac[hist]->setBinLabel(13 - bin, "RE+" + rpc_label[bin - 1], 2);
     }
+
+    gemHitTimingFrac[hist] = ibooker.book2D(
+        "gemHitTimingFrac" + nameBX[hist], "GEM Chamber Occupancy " + labelBX[hist], 42, 1, 43, 2, 0, 2);
+    gemHitTimingFrac[hist]->setAxisTitle("10#circ Chambers", 1);
+    count = 0;
+    for (int xbin = 1; xbin < 43; ++xbin) {
+      gemHitTimingFrac[hist]->setBinLabel(xbin, std::to_string(xbin - count), 1);
+      if (xbin == 2 || xbin == 9 || xbin == 16 || xbin == 23 || xbin == 30 || xbin == 37) {
+        ++xbin;
+        ++count;
+        gemHitTimingFrac[hist]->setBinLabel(xbin, "N", 1);
+      }
+    }
+    gemHitTimingFrac[hist]->setBinLabel(1, "GE-1/1", 2);
+    gemHitTimingFrac[hist]->setBinLabel(2, "GE+1/1", 2);
+    gemHitTimingFrac[hist]->getTH2F()->GetXaxis()->SetCanExtend(false);  // Needed to stop multi-thread summing
   }
 
   rpcHitTimingInTrack =
@@ -659,6 +780,42 @@ void L1TStage2EMTF::analyze(const edm::Event& e, const edm::EventSetup& c) {
         rpcHitOccupancy->Fill((Hit->Sector_RPC() - 1) * 7 + 7, hist_index + 0.5);
       }
     }
+
+    // Add GEM Oct 27 2020
+    //test plots Nov 01 2020
+    hitType->Fill(1);
+    hitTypeBX->Fill(1, Hit->BX());
+    hitTypeSector->Fill(1, sector);
+    if (Hit->Is_CSC() == true) {
+      hitType->Fill(1);
+      hitTypeBX->Fill(1, Hit->BX());
+      hitTypeSector->Fill(1, sector);
+    }
+    else if (Hit->Is_RPC() == true) {
+      hitType->Fill(2);
+      hitTypeBX->Fill(2, Hit->BX());
+      hitTypeSector->Fill(2, Hit->Sector_RPC());
+    }
+    else if (Hit->Is_GEM() == true) {
+      hitType->Fill(3);
+      hitTypeBX->Fill(3, Hit->BX());
+      hitTypeSector->Fill(3, sector);
+    }
+
+
+    if (Hit->Is_GEM() == true) {
+      gemHitBX->Fill(Hit->BX(), (endcap > 0) ? 1.5 : 0.5);
+      hist_index = (endcap > 0) ? 1 : 0;
+      if (Hit->Neighbor() == false) {
+        gemChamberPad[hist_index]->Fill(chamber, Hit->Pad());
+        gemChamberPartition[hist_index]->Fill(chamber, Hit->Partition());
+//        gemHitOccupancy->Fill((Hit->Sector() - 1) * 7 + (Hit->Chamber() + 4) % 6, (endcap > 0) ? 1.5 : 0.5);
+        gemHitOccupancy->Fill(chamber_bin(1, 1, chamber), (endcap > 0) ? 1.5 : 0.5); // follow CSC convention
+      }
+      else 
+//        gemHitOccupancy->Fill((((Hit->Sector() - 2) % 6) + 1) * 7, (endcap > 0) ? 1.5 : 0.5);
+        gemHitOccupancy->Fill(Hit->Sector() * 7 - 4, (endcap > 0) ? 1.5 : 0.5); // follow CSC convention
+    }
   }
 
   // Tracks
@@ -822,6 +979,18 @@ void L1TStage2EMTF::analyze(const edm::Event& e, const edm::EventSetup& c) {
             hist_index = 11 - hist_index;
           rpcHitTiming[histIndexBX.at(trackHitBX)]->Fill((TrkHit.Sector_RPC() - 1) * 7, hist_index + 0.5);
         }
+
+        // Add GEM Timing Oct 27 2020
+        // Decide whether needs to match to CSC LCT
+        if (TrkHit.Is_GEM() == true) {
+          if (neighbor == false) {
+            gemHitTiming[histIndexBX.at(trackHitBX)]->Fill(chamber_bin(1, 1, chamber), (endcap > 0) ? 1.5 : 0.5);
+            gemHitTimingTot->Fill(chamber_bin(1, 1, chamber), (endcap > 0) ? 1.5 : 0.5);
+          } else {
+            gemHitTiming[histIndexBX.at(trackHitBX)]->Fill(sector * 7 - 4, (endcap > 0) ? 1.5 : 0.5);
+            gemHitTimingTot->Fill(sector * 7 - 4, (endcap > 0) ? 1.5 : 0.5);
+          }
+        } // End condition: if (TrkHit.Is_GEM() == true)
       }  // End loop: for (int iHit = 0; iHit < numHits; ++iHit)
     }
     //////////////////////////////////////////////////
@@ -834,6 +1003,7 @@ void L1TStage2EMTF::analyze(const edm::Event& e, const edm::EventSetup& c) {
   for (int hist_index = 0; hist_index < 5; ++hist_index) {
     cscLCTTimingFrac[hist_index]->getTH2F()->Divide(cscLCTTiming[hist_index]->getTH2F(), cscTimingTot->getTH2F());
     rpcHitTimingFrac[hist_index]->getTH2F()->Divide(rpcHitTiming[hist_index]->getTH2F(), rpcHitTimingTot->getTH2F());
+    gemHitTimingFrac[hist_index]->getTH2F()->Divide(gemHitTiming[hist_index]->getTH2F(), gemHitTimingTot->getTH2F());
   }
 
   // Regional Muon Candidates
