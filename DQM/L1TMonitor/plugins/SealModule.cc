@@ -60,6 +60,9 @@ DEFINE_FWK_MODULE(L1TStage2OMTF);
 #include "DQM/L1TMonitor/interface/L1TStage2EMTF.h"
 DEFINE_FWK_MODULE(L1TStage2EMTF);
 
+#include "DQM/L1TMonitor/interface/L1TStage2ShowerEMTF.h"
+DEFINE_FWK_MODULE(L1TStage2ShowerEMTF);
+
 #include "DQM/L1TMonitor/interface/L1TMP7ZeroSupp.h"
 DEFINE_FWK_MODULE(L1TMP7ZeroSupp);
 

@@ -1,0 +1,73 @@
+#ifndef DQM_L1TMonitor_L1TStage2ShowerEMTF_h
+#define DQM_L1TMonitor_L1TStage2ShowerEMTF_h
+
+#include "FWCore/Framework/interface/Event.h"
+#include "FWCore/MessageLogger/interface/MessageLogger.h"
+#include "FWCore/ParameterSet/interface/ParameterSet.h"
+
+#include "DQMServices/Core/interface/DQMOneEDAnalyzer.h"
+#include "DQMServices/Core/interface/DQMStore.h"
+
+#include "DataFormats/L1TMuon/interface/EMTFDaqOut.h"
+#include "DataFormats/L1TMuon/interface/EMTFHit.h"
+#include "DataFormats/L1TMuon/interface/EMTFTrack.h"
+#include "DataFormats/L1TMuon/interface/RegionalMuonCand.h"
+#include "DataFormats/L1TMuon/interface/RegionalMuonShower.h"
+
+class L1TStage2ShowerEMTF : public DQMOneEDAnalyzer<> {
+public:
+  L1TStage2ShowerEMTF(const edm::ParameterSet& ps);
+  ~L1TStage2ShowerEMTF() override;
+
+protected:
+  void bookHistograms(DQMStore::IBooker&, const edm::Run&, const edm::EventSetup&) override;
+  void analyze(const edm::Event&, const edm::EventSetup&) override;
+
+private:
+//  edm::EDGetTokenT<l1t::EMTFHitCollection> hitToken;
+  edm::EDGetTokenT<l1t::RegionalMuonShowerBxCollection> showerToken;
+  std::string monitorDir;
+  bool verbose;
+
+  MonitorElement* showerOccupancy;
+  MonitorElement* showerInfoBX;
+  MonitorElement* showerNperEvt;
+  MonitorElement* showerCheckNomInTime;
+ 
+//  MonitorElement* emtfErrors;
+//  MonitorElement* mpcLinkErrors;
+//  MonitorElement* mpcLinkGood;
+//
+//  MonitorElement* cscLCTBX;
+//  MonitorElement* cscLCTStrip[20];
+//  MonitorElement* cscLCTWire[20];
+//  MonitorElement* cscChamberStrip[20];
+//  MonitorElement* cscChamberWire[20];
+//  MonitorElement* cscLCTOccupancy;
+//  MonitorElement* cscDQMOccupancy;
+//  MonitorElement* cscLCTTiming[5];
+//  MonitorElement* cscLCTTimingFrac[5];
+//  MonitorElement* cscTimingTot;
+//  MonitorElement* emtfTrackModeVsCSCBXDiff[8];  // Add mode vs BXdiff comparison Dec 07 2020
+//
+//  // Add GEMs Oct 27 2020
+//  MonitorElement* hitTypeBX;
+//  MonitorElement* gemHitBX;
+//  MonitorElement* gemHitOccupancy;
+//  MonitorElement* gemHitTiming[5];
+//  MonitorElement* gemHitTimingFrac[5];
+//  MonitorElement* gemHitTimingTot;
+//  MonitorElement* gemChamberPad[2];
+//  MonitorElement* gemChamberPartition[2];
+//  MonitorElement* emtfTrackBXVsGEMHit[3];
+//  MonitorElement* emtfTrackModeVsGEMBXDiff[2];  // Add mode vs BXdiff comparison Dec 07 2020
+//
+//  // GEM vs CSC Dec 06 2020
+//  MonitorElement* gemHitPhi[2];
+//  MonitorElement* gemHitTheta[2];
+//  MonitorElement* gemHitVScscLCTPhi[2];
+//  MonitorElement* gemHitVScscLCTTheta[2];
+//  MonitorElement* gemHitVScscLCTBX[2];
+};
+
+#endif
